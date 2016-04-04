@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#SBATCH -A SNIC2015-1-450
+#SBATCH -p glenn
+#SBATCH -J PTRBuild 
+#SBATCH -N 1
+#SBATCH -n 16
+#SBATCH -t 4:00:00
+#SBATCH -o output.%A_%a.stdout
+#SBATCH -e output.%A_%a.stderr
+#SBATCH --mail-type=END
+#SBATCH --mail-user=daniel@murrays.nu
+
+source $SLURM_SUBMIT_DIR/loadmodules.sh
+
+mkdir $TMPDIR/Data
+mkdir $TMPDIR/Analysis
+mkdir $TMPDIR/RefSeq/
+mkdir $TMPDIR/RefSeq/Index
+mkdir $TMPDIR/RefSeq/headers
+mkdir $TMPDIR/DoriC
+
+#cp -R /c3se/NOBACKUP/users/hedani/Data/japanMirr/ddbj_database/dra/fastq/SRA045/SRA045646/SRX09567$SLURM_ARRAY_TASK_ID/Data $TMPDIR
+#cp -R /c3se/NOBACKUP/users/hedani/Data/japanMirr/ddbj_database/dra/fastq/SRA045/SRA045646/SRX09567$SLURM_ARRA    Y_TASK_ID/Data $TMPDIR
+
+#PATHBASE=/c3se/users/hedani/Glenn/noback/ftp.ddbj.nig.ac.jp/ddbj_database/dra/fastq/SRA045/SRA045646
+PATHBASE=/c3se/NOBACKUP/groups/c3-sysbio/hedani/SRA045646
+STARTIND=$[701+$SLURM_ARRAY_TASK_ID*5]
+
+seq $[$STARTIND+0] $[$STARTIND+4] | parallel cp $PATHBASE/SRX095{}/* $TMPDIR/Data
+
+pdcp -r /c3se/NOBACKUP/users/hedani/Data/References/NCBI/RefSeq $TMPDIR
+pdcp -r $SNIC_BACKUP/Glenn/References/DoriC $TMPDIR
+
+$SLURM_SUBMIT_DIR/mainBuildHype2.sh
+
+rpdcp -r $TMPDIR/Data $SNIC_NOBACKUP/Data/bowTot
+
+# run with sbatch -C HUGEMEM script.sh
+
+# End script
