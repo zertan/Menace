@@ -4,14 +4,14 @@ set -o pipefail # exit if error somewhere in pipe
 set -e #exit on execution error
 
 # paths
-REFNAME=RefSeq
+REFNAME=$2
 DATAPATH=$TMPDIR/Data
 REFPATH=$TMPDIR/$REFNAME
 DESTPATH=$TMPDIR/Analysis
 DORICPATH=$TMPDIR/DoriC
-SCRIPTPATH=$SLURM_SUBMIT_DIR
+SCRIPTPATH=$1
 
-CPUCORES=16
+CPUCORES=$3
 THREADMEMORY=1800
 
 echo "Running alignment stage"
@@ -65,7 +65,7 @@ for RUNNAME in "${files[@]}"; do
 
     echo "$RUNNAME: Performing piecewise fits"
 
-    parallel $SCRIPTPATH/piecewiseFit.py {} $REFPATH/headers/ $DORICPATH/ ::: *.depth
+    parallel $SCRIPTPATH/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.depth
 
     mkdir log
     mv *.log log
