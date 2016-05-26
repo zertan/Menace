@@ -1,8 +1,6 @@
 PTR Extraction Software
 This bundle of scripts is a basic implementation of the algorithm for extracting Peak-to-Trough Ratios from Metagenomic data, as first described by Korem et. al (Korem et. al, Science, 2015).
 
-The implementation follows a 
-
 Below follows a description of the main scripts in the package:
 
 ###########
@@ -63,5 +61,6 @@ bamtools
 
 Pathoscope 2.0
 
+Example usage:
 
 
