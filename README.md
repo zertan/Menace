@@ -67,7 +67,11 @@ lmfit
 A short version of this usage can be found [below](## Short usage).
 
 #### 1 Follow the above [Installation](## Installation) procedure.
-#### 2 Download Metagenomic data to your cluster.
+
+#### 2 Update config.sh and loadmodules.sh
+Edit the necassry information in config.sh and do a ´source config.sh´. Most cluster resources load software as modules. Update loadmodules.sh and make sure you have the correct module names for python with numpy and scipy loaded.
+
+#### 3 Download Metagenomic data to your cluster.
 Ex. Download sample ERR525688-ERR525787 of cohort ERR525 using four wget processes.
 
 ```bash
@@ -99,15 +103,7 @@ done < ${REF_PATH}/taxIDs.txt
 Now build the index:
 ```bash
 mkdir ${REF_PATH}/Index
-bowtie2-build --large-index $(ls -1 ${REF_PATH} | tr '\n' ',') ${REF_PATH}/Index/${REF_NAME}
-```
-
-#### 5 Update cluster specific script information.
-Edit path to top input data folder (and output folder) in 'jobscript' and 'mainBuild.sh'.
-
-```bash
-sed -i 's|DATA_PATH=.*|DATA_PATH='${DATA_PATH}'|g' jobscript
-sed -i 's|OUTPUT_PATH=.*|OUTPUT_PATH='${OUTPUT_PATH}'|g' jobscript
+bowtie2-build --large-index $(ls -1 --color=none ${REF_PATH}/Fasta | tr '\n' ',') ${REF_PATH}/Index/${REF_NAME}
 ```
 
 #### 6 Submit jobscript to cluster

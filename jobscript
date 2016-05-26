@@ -20,17 +20,17 @@ mkdir $TMPDIR/RefSeq/Index
 mkdir $TMPDIR/RefSeq/Headers
 mkdir $TMPDIR/DoriC
 
-STARTIND=$[701+$SLURM_ARRAY_TASK_ID*5]
+STARTIND=$[$START_IND+$SLURM_ARRAY_TASK_ID*5]
 
-seq $[$STARTIND+0] $[$STARTIND+4] | parallel cp $DATAPATH/SRX095{}/* $TMPDIR/Data
+seq $STARTIND $[$STARTIND+4] | parallel cp $DATA_PATH/$FOLDER_PREFIX{}/* $TMPDIR/Data
 
 pdcp -r $REF_PATH $TMPDIR
 pdcp -r $DORIC_PATH $TMPDIR
 
-$SUBMIT_DIR/mainBuild.sh $SUBMIT_DIR $REFNAME
+$SUBMIT_DIR/mainBuild.sh $SUBMIT_DIR $REF_NAME
 
 mkdir $OUT_PATH/$RUN_NAME
 
-rpdcp -r $TMPDIR/Data $OUT_PATH/$RUNNAME
+rpdcp -r $TMPDIR/Data $OUT_PATH/$RUN_NAME
 
 # End script

@@ -147,7 +147,7 @@ if (args.taxBool==True):
 	
 	outHandle = open(join(args.dataPath,"taxIDs.txt"), "w")
 
-	outHandle.write("ACC"+"\tOrg"+"\tStr"+"\n")
+	#outHandle.write("ACC"+"\tOrg"+"\tStr"+"\n")
 	for i, searchStr in enumerate(searchStrings):	
 		outHandle.write(searchStr+"\t"+orgIdArr[i]+"\t"+tIdArr[i]+"\n")	
 				
