@@ -1,0 +1,4 @@
+jinja2>=2.8.0
+pandas
+xmltodict
+lmfit
