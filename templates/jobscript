@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+#SBATCH -A {{ project }}
+#SBATCH -p {{ cluster }}
+#SBATCH -J {{ job_name }} 
+#SBATCH -N {{ job_nodes}}
+#SBATCH -n {{ cpu_cores }}
+#SBATCH -t {{ estimated_time }}
+#SBATCH -o output.%A_%a.stdout
+#SBATCH -e output.%A_%a.stderr
+#SBATCH --mail-type=END
+#SBATCH --mail-user={{ email }}
+
+source $SLURM_SUBMIT_DIR/bin/loadmodules.sh
+#source $SLURM_SUBMIT_DIR/config.sh
+
+NODE_PATH={{ node_path }}
+REF_PATH={{ ref_path }}
+DATA_PATH={{ data_path }}
+OUTPUT_PATH={{ output_path }}
+
+REF_NAME={{ ref_name }}
+START_IND={{ start_ind }}
+SAMPLES_PER_NODE={{ samples_per_node }}
+CPU_CORES={{ cpu_cores }}
+
+mkdir $NODE_PATH/Data
+mkdir $NODE_PATH/Analysis
+mkdir $NODE_PATH/$REF_NAME
+mkdir $NODE_PATH/$REF_NAME/Index
+mkdir $NODE_PATH/$REF_NAME/Headers
+mkdir $NODE_PATH/DoriC
+
+IND=$[$START_IND+$SLURM_ARRAY_TASK_ID*$SAMPLES_PER_NODE]
+
+seq $IND $[$IND+$SAMPLES_PER_NODE-1] | parallel cp $DATA_PATH/$FOLDER_PREFIX{}/* $NODE_PATH/Data
+
+pdcp -r $REF_PATH $NODE_PATH
+pdcp -r $DORIC_PATH $NODE_PATH
+
+$SLURM_SUBMIT_DIR/bin/mainBuild.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_PATH
+
+mkdir -p $OUT_PATH
+
+rpdcp -r $NODE_PATH/Data $OUT_PATH
+
+# End script

@@ -66,7 +66,7 @@ lmfit
 ## Usage
 A short version of this usage can be found [below](## Short usage).
 
-#### 1 Follow the above [Installation](## Installation) procedure.
+#### 1 Follow the above [Installation](##Installation) procedure.
 
 #### 2 Update config.sh and loadmodules.sh
 Edit the necassry information in config.sh and do a ´source config.sh´. Most cluster resources load software as modules. Update loadmodules.sh and make sure you have the correct module names for python with numpy and scipy loaded.

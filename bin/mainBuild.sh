@@ -5,14 +5,13 @@ set -e #exit on execution error
 
 # paths
 REFNAME=$2
-DATAPATH=$TMPDIR/Data
-REFPATH=$TMPDIR/$REFNAME
-DESTPATH=$TMPDIR/Analysis
-DORICPATH=$TMPDIR/DoriC
+NODEPATH=$4
+DATAPATH=$NODEPATH/Data
+REFPATH=$NODEPATH/$REFNAME
+DESTPATH=$NODEPATH/Analysis
+DORICPATH=$NODEPATH/DoriC
 SCRIPTPATH=$1
-
 CPUCORES=$3
-THREADMEMORY=1800
 
 echo "Running alignment stage"
 cd $DATAPATH
@@ -65,7 +64,7 @@ for RUNNAME in "${files[@]}"; do
 
     echo "$RUNNAME: Performing piecewise fits"
 
-    parallel $SCRIPTPATH/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.depth
+    parallel $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.depth
 
     mkdir log
     mv *.log log
