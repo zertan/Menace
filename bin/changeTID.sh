@@ -7,7 +7,11 @@
 # add ti numbers to references
 while IFS=$'\t' read -r -a arr
 do
-	sed -i "s/^>gi/>ti|${arr[1]}|gi/" "$1/Fasta/${arr[0]}.fasta"
+	LINE=$(head -1 "$1/Fasta/${arr[0]}.fasta")
+	if [[ "$LINE" =~ "^>gi*" ]]
+	then
+		sed -i "" "s/^>gi/>ti|${arr[1]}|gi/" "$1/Fasta/${arr[0]}.fasta"
+	fi
 done < $1/taxIDs.txt
 
 #for fn in "${files[@]}"; do 

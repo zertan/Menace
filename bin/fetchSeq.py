@@ -121,7 +121,7 @@ if (args.taxBool==True):
 	data=data.split('<DocSum>')
 	data=data[1:]
 
-	print("Writing headers " +repr(ind+1)+ " to "+str(args.dataPath))
+	print("Writing headers to "+str(args.dataPath))
 	for i, searchStr in enumerate(inputString):
 		outHandle = open(join(args.dataPath,"Headers",searchStr+".xml"), "w")
 		outHandle.write("<DocSum>"+data[i])
@@ -140,10 +140,15 @@ if (args.taxBool==True):
 	for i,record in enumerate(records):
 		lineage = record['LineageEx'] # get the entire lineage of the first record
 		#assert len(records) == 1 # die if we get more than one record, unlikely?
+		#print(lineage)
+		
+		tmpId=lineage[-1]['TaxId']
 		for entry in lineage:
 			if entry['Rank'] == 'species':
 				#print(entry) # prints: {u'ScientificName': 'Viridiplantae', u'TaxId': '33090', u'Rank': 'kingdom '}
-				orgIdArr.append(entry['TaxId'])
+				tmpId=entry['TaxId']
+		
+		orgIdArr.append(tmpId)
 	
 	outHandle = open(join(args.dataPath,"taxIDs.txt"), "w")
 

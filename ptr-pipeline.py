@@ -49,27 +49,27 @@ def get_parser():
 
     subparsers = parser.add_subparsers(dest='subparser_name')
 
-    parser_m = subparsers.add_parser('make', help='generate an sbatch jobscript')
-    parser_m.add_argument("-e", action='store_true')
-
     parser_fe = subparsers.add_parser('fetch', help='download references from NCBI')
     parser_fe.add_argument("-s", dest='fe_srch_file', help='A file with search strings to download.')
 
     parser_b = subparsers.add_parser('build-index', help='build a bowtie2 index')
-    parser_b.add_argument("--opt3", action='store_true')
-    parser_b.add_argument("--opt4", action='store_true')
+    parser_b.add_argument("-t", dest='b_threads', help='The number of cpu threads to use.',default=1)
+    #parser_b.add_argument("--opt4", action='store_true')
+
+    parser_m = subparsers.add_parser('make', help='generate an sbatch jobscript')
+    #parser_m.add_argument("-e", action='store_true')
 
     parser_s = subparsers.add_parser('submit', help='submit job to slurm')
-    parser_s.add_argument("-opt9", action='store_true')
-    parser_s.add_argument("--opt10", action='store_true')
+    #parser_s.add_argument("-opt9", action='store_true')
+    #parser_s.add_argument("--opt10", action='store_true')
 
     parser_f = subparsers.add_parser('full', help='perform all the above steps')
-    parser_f.add_argument("-opt5", action='store_true')
-    parser_f.add_argument("--opt6", action='store_true')
+    #parser_f.add_argument("-opt5", action='store_true')
+    #parser_f.add_argument("--opt6", action='store_true')
 
     parser_c = subparsers.add_parser('collect', help='collect output cluster data')
-    parser_c.add_argument("--opt7", action='store_true')
-    parser_c.add_argument("--opt8", action='store_true')
+    parser_c.add_argument("-o", dest='c_out_path', help='Path to store output.')
+    #parser_c.add_argument("--opt8", action='store_true')
 
     return parser
 
@@ -140,6 +140,8 @@ def generate_jobscript(config):
     env = Environment(loader=FileSystemLoader("templates"))
     template = env.get_template("jobscript")
 
+    #data_prefix=os.path.commonprefix(['/usr/lib', '/usr/local/lib'])
+
     with open("jobscript", "w") as f:
         output = template.render(
             project=config['Project']['ProjectID'],
@@ -179,14 +181,18 @@ def generate_jobscript(config):
 #                                  stat.S_IXGRP |
 #                                  stat.S_IXOTH))
 
-def generate_bt2_build_command(config):
+def generate_bt2_build_command(args,config):
     """Generate command for building a bowtie2 index."""
-    referenceList="";
-    for file in os.listdir(config['Directories']['References']):
-        if file.endswith(".fasta"):
-            referenceList=referenceList+","+file
+    #for file in os.listdir(os.path.join(config['Directories']['References'],'Fasta')):
+        #if file.endswith(".fasta"):
+        #    print(file)
+    d=os.path.join(config['Directories']['References'],'Fasta');
+    files=[os.path.join(d, f) for f in os.listdir(d)]
+    referenceList=",".join(files)
 
-    cmd = "bowtie2-build --large-index " + referenceList + " " + os.join(config['Directories']['References'],"Index",config['Other']['RefName'])
+    #print(referenceList)
+
+    cmd = "bowtie2-build --large-index " + "-t " + repr(args.b_threads) + " " + referenceList + " " + os.path.join(config['Directories']['References'],"Index",config['Other']['RefName'])
     return cmd
 
 def generate_fetch_command(args,config):
@@ -229,9 +235,9 @@ def main():
         process.wait()
 
     if(args.subparser_name=='full' or args.subparser_name=='build-index'):
-        process = subprocess.Popen(generate_bt2_build_command(config), shell=True)
+        process = subprocess.Popen("bin/changeTID.sh " + config['Directories']['References'], shell=True)
         process.wait()
-        process = subprocess.Popen(["bin/changeTID.sh",config['Directories']['References']], shell=True)
+        process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
         process.wait()
 
     if(args.subparser_name=='full' or args.subparser_name=='make'):
