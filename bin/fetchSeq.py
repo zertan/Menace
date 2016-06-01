@@ -122,7 +122,7 @@ if (args.taxBool==True):
 	data=data[1:]
 
 	print("Writing headers " +repr(ind+1)+ " to "+str(args.dataPath))
-	for i, searchStr in enumerate(searchStrings):
+	for i, searchStr in enumerate(inputString):
 		outHandle = open(join(args.dataPath,"Headers",searchStr+".xml"), "w")
 		outHandle.write("<DocSum>"+data[i])
 		outHandle.close()
@@ -148,7 +148,7 @@ if (args.taxBool==True):
 	outHandle = open(join(args.dataPath,"taxIDs.txt"), "w")
 
 	#outHandle.write("ACC"+"\tOrg"+"\tStr"+"\n")
-	for i, searchStr in enumerate(searchStrings):	
+	for i, searchStr in enumerate(inputString):	
 		outHandle.write(searchStr+"\t"+orgIdArr[i]+"\t"+tIdArr[i]+"\n")	
 				
 	outHandle.close()

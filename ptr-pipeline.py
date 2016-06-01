@@ -53,7 +53,7 @@ def get_parser():
     parser_m.add_argument("-e", action='store_true')
 
     parser_fe = subparsers.add_parser('fetch', help='download references from NCBI')
-    parser_fe.add_argument("-s", dest=fe_srch_file, help='A file with search strings to download.')
+    parser_fe.add_argument("-s", dest='fe_srch_file', help='A file with search strings to download.')
 
     parser_b = subparsers.add_parser('build-index', help='build a bowtie2 index')
     parser_b.add_argument("--opt3", action='store_true')
@@ -182,17 +182,18 @@ def generate_jobscript(config):
 def generate_bt2_build_command(config):
     """Generate command for building a bowtie2 index."""
     referenceList="";
-    for file in os.listdir(config['References']):
+    for file in os.listdir(config['Directories']['References']):
         if file.endswith(".fasta"):
             referenceList=referenceList+","+file
 
-    cmd = "bowtie2-build --large-index " + referenceList + os.join(config['References'],"Index",config['RefName'])
+    cmd = "bowtie2-build --large-index " + referenceList + " " + os.join(config['Directories']['References'],"Index",config['Other']['RefName'])
     return cmd
 
-def generate_fetch_command(config):
+def generate_fetch_command(args,config):
     """Generate command for downloading reference fastas and headers."""
-    cmd = "bin/fetchSeq.py -e {email} -t True -d {data_path}"
-    return cmd.format(**config)
+    tmp={'email': config['Other']['Email'], 'ref_path': config['Directories']['References']}
+    cmd = "bin/fetchSeq.py -e {email} -t True -d {ref_path} -s " + args.fe_srch_file
+    return cmd.format(**tmp)
 
 def generate_sbatch_command(config):
     """Generate command for scheduling all sample runs."""
@@ -219,29 +220,28 @@ def generate_collect_command(config):
 #           "exit the virtual environment.")
 #     print("")
 
-
 def main():
     args = parse_args(sys.argv[1:])
     config = read_config(args)
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch'):
-        process = subprocess.Popen(generate_fetch_command(config), shell=True, stdout=subprocess.PIPE)
+        process = subprocess.Popen(generate_fetch_command(args,config), shell=True)
         process.wait()
 
     if(args.subparser_name=='full' or args.subparser_name=='build-index'):
-        process = subprocess.Popen(generate_bt2_build_command(config), shell=True, stdout=subprocess.PIPE)
+        process = subprocess.Popen(generate_bt2_build_command(config), shell=True)
         process.wait()
-        process = subprocess.Popen(["bin/changeTID.sh",config['Directories']['References']], shell=True, stdout=subprocess.PIPE)
+        process = subprocess.Popen(["bin/changeTID.sh",config['Directories']['References']], shell=True)
         process.wait()
 
     if(args.subparser_name=='full' or args.subparser_name=='make'):
         generate_jobscript(config)
 
     if(args.subparser_name=='full' or args.subparser_name=='submit'):
-        process = subprocess.Popen(generate_sbatch_command(config), shell=True, stdout=subprocess.PIPE)
+        process = subprocess.Popen(generate_sbatch_command(config), shell=True)
 
     if(args.subparser_name=='collect'):
-        process = subprocess.Popen(generate_collect_command(config), shell=True, stdout=subprocess.PIPE)
+        process = subprocess.Popen(generate_collect_command(config), shell=True)
 
     # prov = provider.get_provider(args['provider_name'], args['project_dir'])
     # p = project.Project(args, prov)
