@@ -40,15 +40,21 @@ This utility can be used to download '.fasta' reference files from the NCBI serv
 ```bash
 git clone git@github.com:zertan/PTR-pipeline.git
 cd PTR-pipeline
-python setup.py install
+pip3 install requirements3.txt
+pip install requirements.txt
 ```
 
 This should install the package including the below *python* dependencies. The other dependencies have to be installed manually (if you have questions about this I suggest you consult your cluster IT help desk).
 
 ### Dependencies:
 
-python>=2.7
+Python3:
+python>=3.3
 Biopython
+Jinja2
+
+Python2:
+python>=2.7
 numpy
 scipy
 pandas
@@ -64,7 +70,7 @@ lmfit
 [DoriC](http://tubic.tju.edu.cn/doric/download.php) is a databse of chromosome origin locations (OriCs) which is a (recommended) optional dependency for the pipeline. Please visit the link and enter your e-mail to download.
 
 ## Usage
-A short version of this usage can be found [below](## Short usage).
+A short version of this usage can be found [below](##Short usage).
 
 #### 1 Follow the above [Installation](##Installation) procedure.
 

@@ -11,7 +11,6 @@
 #SBATCH --mail-user={{ email }}
 
 source $SLURM_SUBMIT_DIR/bin/loadmodules.sh
-#source $SLURM_SUBMIT_DIR/config.sh
 
 NODE_PATH={{ node_path }}
 REF_PATH={{ ref_path }}
@@ -22,6 +21,8 @@ REF_NAME={{ ref_name }}
 START_IND={{ start_ind }}
 SAMPLES_PER_NODE={{ samples_per_node }}
 CPU_CORES={{ cpu_cores }}
+
+FOLDER_PREFIX={{ folder_prefix }}
 
 mkdir $NODE_PATH/Data
 mkdir $NODE_PATH/Analysis
@@ -39,8 +40,8 @@ pdcp -r $DORIC_PATH $NODE_PATH
 
 $SLURM_SUBMIT_DIR/bin/mainBuild.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_PATH
 
-mkdir -p $OUT_PATH
+mkdir -p $OUTPUT_PATH
 
-rpdcp -r $NODE_PATH/Data $OUT_PATH
+rpdcp -r $NODE_PATH/Data $OUTPUT_PATH
 
 # End script

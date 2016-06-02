@@ -16,12 +16,23 @@ CPUCORES=$3
 echo "Running alignment stage"
 cd $DATAPATH
 
+# pick up .gz or .bz2 files and prune file ending
+declare -a files
+
 shopt -s nullglob
-files=( *_1.fastq.bz2 )
-files=( "${files[@]%_1.fastq.bz2}" )
+fileEndings=(".fastq.bz2" ".fastq.gz" ".fastq")
+
+for ending in "${fileEndings[@]}"; do
+    files=( *"$ending" )
+    files=( "${files[@]%_1$ending}" )
+    fileEnding="$ending"
+    if [ ! ${#files[@]} -eq 0 ]; then
+        break
+    fi
+done
 
 for fn in "${files[@]}"; do
-	bowtie2 -k 5 -p $CPUCORES -x $REFPATH/Index/$REFNAME -1 "$fn"_1.fastq.bz2 -2 "$fn"_2.fastq.bz2 -S "$fn".sam
+	bowtie2 -k 5 -p $CPUCORES -x $REFPATH/Index/$REFNAME -1 "$fn"_1"$fileEnding" -2 "$fn"_2"$fileEnding" -S "$fn".sam
 done
 
 parallel rm -f {}_1.fastq.bz2 {}_2.fastq.bz2 ::: "${files[@]}"
