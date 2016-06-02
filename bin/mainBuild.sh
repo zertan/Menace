@@ -4,14 +4,15 @@ set -o pipefail # exit if error somewhere in pipe
 set -e #exit on execution error
 
 # paths
+SCRIPTPATH=$1
+CPUCORES=$3
 REFNAME=$2
 NODEPATH=$4
+
 DATAPATH=$NODEPATH/Data
 REFPATH=$NODEPATH/References
 DESTPATH=$NODEPATH/Analysis
 DORICPATH=$NODEPATH/DoriC
-SCRIPTPATH=$1
-CPUCORES=$3
 
 echo "Running alignment stage"
 cd $DATAPATH

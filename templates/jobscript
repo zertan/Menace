@@ -33,7 +33,7 @@ mkdir $NODE_PATH/DoriC
 
 IND=$[$START_IND+$SLURM_ARRAY_TASK_ID*$SAMPLES_PER_NODE]
 
-seq $IND $[$IND+$SAMPLES_PER_NODE-1] | parallel cp $DATA_PATH/$DATA_PREFIX{}/* $NODE_PATH/Data
+seq $IND $[$IND+$SAMPLES_PER_NODE-1] | parallel cp $DATA_PATH/$DATA_PREFIX{}* $NODE_PATH/Data
 
 pdcp -r $REF_PATH/Headers $NODE_PATH/References
 pdcp -r $REF_PATH/Index $NODE_PATH/References

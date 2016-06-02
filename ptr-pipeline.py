@@ -276,10 +276,9 @@ def generate_fetch_seq_command(args,config):
     if(not re.match("ftp://",url)):
         url="ftp://"+url
 
-    cmd=" | parallel -j " + str(args.feSeq_threads) + " wget -r --no-parent -P "+ config['data_path'] + " " + url + "{}/"
+    cmd=" | parallel -j " + str(args.feSeq_threads) + " wget -r -nH -np -nd -R index.html* -P " + config['data_path'] + " " + url + "{}/"
     #cmd="$(echo {"+ str(config['start_ind']) + ".." + str(end_ind) + "})"+cmd
     cmd='seq -f %0' + str(nr_digits) + 'g ' + str(config['start_ind']) + " " + str(end_ind) + cmd
-    print(cmd)
     return cmd
 
 def generate_fetch_ref_command(args,config):
@@ -289,8 +288,12 @@ def generate_fetch_ref_command(args,config):
 
 def generate_sbatch_command(config):
     """Generate command for scheduling all sample runs."""
-    cmd = "sbatch --array=0-{0}%6 jobscript"
-    job_range = floor(config['nr_samples']/config['samples_per_node'])
+    cmd = "sbatch --array=0-{0} jobscript"
+    minus=0
+    if(int(config['samples_per_node'])==1):
+        minus=1
+
+    job_range = int(floor(float(config['nr_samples'])/float(config['samples_per_node'])))-minus
     return cmd.format(job_range)
 
 def generate_collect_command(config):
