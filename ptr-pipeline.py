@@ -181,7 +181,10 @@ def compile_config(args,config):
         'samples_per_node': config['Other']['SamplesPerNode'],
         'email': email,
         'data_prefix': data_prefix,
-        'start_ind': start_ind
+        'start_ind': start_ind,
+
+        'ftp_url': ftp_url,
+        'data_url': data_url
     }
     return conf
 
@@ -262,17 +265,19 @@ def get_data_prefix(config):
 
 def generate_fetch_seq_command(args,config):
     #let e="787";let s="688";let n="($e-$s+1)/5-1";
-    cmd="seq $s $e | parallel -j " + args.feSeq_threads + " wget -r --no-parent -P {data_path} $COHORT_URL/{data_prefix}"    
-    return cmd.format(**config)+"{}/"
+    end_ind=int(config['start_ind'])+int(config['nr_samples'])
+    url=os.path.join(config['ftp_url'],config['data_url'],config['data_prefix'])
+    cmd="echo {{start_ind}.." + end_ind + "} | parallel -j " + args.feSeq_threads + " wget --no-parent -P {data_path} " + url
+    return cmd.format(**config)+"{}"
 
 def generate_fetch_ref_command(args,config):
     """Generate command for downloading reference fastas and headers."""
-    cmd = "bin/fetchSeq.py -e {email} -t True -d {ref_path} -s "+ args.fe_srch_file
+    cmd = "bin/fetchSeq.py -e {email} -t True -d {ref_path} -s " + args.fe_srch_file
     return cmd.format(**config)
 
 def generate_sbatch_command(config):
     """Generate command for scheduling all sample runs."""
-    cmd = "sbatch --array=0-{0}%6 run_sample.sh"
+    cmd = "sbatch --array=0-{0}%6 jobscript"
     job_range = floor(config['nr_samples']/config['samples_per_node'])
     return cmd.format(job_range)
 
@@ -300,7 +305,8 @@ def main():
     config = compile_config(args,config)
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
-        fetch_seq(args,config)
+        process = subprocess.Popen(generate_fetch_seq_command(args,config), shell=True)
+        process.wait()
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch-references'):
         process = subprocess.Popen(generate_fetch_ref_command(args,config), shell=True)
