@@ -7,7 +7,7 @@ set -e #exit on execution error
 REFNAME=$2
 NODEPATH=$4
 DATAPATH=$NODEPATH/Data
-REFPATH=$NODEPATH/$REFNAME
+REFPATH=$NODEPATH/References
 DESTPATH=$NODEPATH/Analysis
 DORICPATH=$NODEPATH/DoriC
 SCRIPTPATH=$1
@@ -23,7 +23,7 @@ shopt -s nullglob
 fileEndings=(".fastq.bz2" ".fastq.gz" ".fastq")
 
 for ending in "${fileEndings[@]}"; do
-    files=( *"$ending" )
+    files=( *_1"$ending" )
     files=( "${files[@]%_1$ending}" )
     fileEnding="$ending"
     if [ ! ${#files[@]} -eq 0 ]; then
@@ -35,7 +35,7 @@ for fn in "${files[@]}"; do
 	bowtie2 -k 5 -p $CPUCORES -x $REFPATH/Index/$REFNAME -1 "$fn"_1"$fileEnding" -2 "$fn"_2"$fileEnding" -S "$fn".sam
 done
 
-parallel rm -f {}_1.fastq.bz2 {}_2.fastq.bz2 ::: "${files[@]}"
+parallel rm -f {}_1"$fileEnding" {}_2"$fileEnding" ::: "${files[@]}"
 
 echo "Running pathoscope"
 

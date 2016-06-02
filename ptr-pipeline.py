@@ -13,12 +13,13 @@ import stat
 import sys
 import subprocess
 import ftplib
+import re
+from math import floor
 
 from jinja2 import Environment, FileSystemLoader
 
 CODE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(os.path.dirname(CODE_DIR), "templates")
-#CONFIG_DIR = os.path.join(os.path.dirname(CODE_DIR), "config")
 DEFAULT_CONFIG = os.path.join(CODE_DIR, "project.conf")
 
 
@@ -51,7 +52,7 @@ def get_parser():
     subparsers = parser.add_subparsers(dest='subparser_name')
 
     parser_feSeq = subparsers.add_parser('fetch-data', help='download references from NCBI')
-    parser_b.add_argument("-t", dest='feSeq_threads', help='The number of simulataneous wget processes to use.',default=1)
+    parser_feSeq.add_argument("-t", dest='feSeq_threads', help='The number of simultaneous wget processes to use.',default=1)
     
 
     parser_fe = subparsers.add_parser('fetch-references', help='download references from NCBI')
@@ -69,6 +70,10 @@ def get_parser():
     #parser_s.add_argument("--opt10", action='store_true')
 
     parser_f = subparsers.add_parser('full', help='perform all the above steps')
+    parser_feSeq.add_argument("-t1", dest='feSeq_threads', help='The number of simultaneous wget processes to use.',default=1)
+    parser_b.add_argument("-t2", dest='b_threads', help='The number of cpu threads to use.',default=1)
+    parser_fe.add_argument("-s1", dest='fe_srch_file', help='A file with search strings to download.',default='./searchStrings')
+
     #parser_f.add_argument("-opt5", action='store_true')
     #parser_f.add_argument("--opt6", action='store_true')
 
@@ -84,7 +89,13 @@ def get_parser():
 
 def parse_args(args):
     """Parse command line arguments"""
+    
+
     args = get_parser().parse_args(args)
+    if(args.subparser_name=='full'):
+        args.fe_srch_file='./searchStrings'
+        args.b_threads=1
+        args.feSeq_threads=1
     return args
 
 
@@ -145,12 +156,12 @@ def get_current_dir_subdirs(f):
     f.dir("",ret.append)
     ret = [x.split()[-1] for x in ret if x.startswith("d")]
     return ret 
-ƒ
-def compile_config(args,config)
-    
-    data_prefix=get_data_prefix(config)
-    email=[args.email if not args.email=="" else config['Other']['Email']]
 
+def compile_config(args,config):
+    
+    start_ind, data_prefix=get_data_prefix(config)
+
+    email=[args.email if not args.email=="" else config['Other']['Email']]
     conf={
         'project': config['Project']['ProjectID'],
         'cluster': config['Project']['Cluster'],
@@ -158,7 +169,7 @@ def compile_config(args,config)
         'job_nodes': config['Project']['JobNodes'],
         'cpu_cores': config['Project']['CpuCores'],
         'estimated_time': config['Project']['EstimatedTime'],
-        
+
         'node_path': config['Directories']['Node'],
         'ref_path': config['Directories']['References'],
         'data_path': config['Directories']['Data'],
@@ -170,14 +181,15 @@ def compile_config(args,config)
         'samples_per_node': config['Other']['SamplesPerNode'],
         'email': email,
         'data_prefix': data_prefix,
+        'start_ind': start_ind
+    }
+    return conf
 
-        'fe_srch_file': args.fe_srch_file,
-        'b_threads': args.b_threads,
-        'c_out_path': args.c_out_path,
-        'feSeq_threads': feSeq_threads
-        }
-        return conf
 
+        # 'fe_srch_file': args.fe_srch_file,
+        # 'b_threads': args.b_threads,
+        # 'c_out_path': args.c_out_path,
+        # 'feSeq_threads': feSeq_threads
 
 def generate_jobscript(config):
     env = Environment(loader=FileSystemLoader("templates"))
@@ -202,7 +214,8 @@ def generate_jobscript(config):
             nr_samples=config['nr_samples'],
             samples_per_node=config['samples_per_node'],
             email=config['email'],
-            data_prefix=config['data_prefix']
+            data_prefix=config['data_prefix'],
+            start_ind=config['start_ind']
         )
         f.write(output)
 
@@ -234,32 +247,33 @@ def generate_bt2_build_command(config):
 
     #print(referenceList)
 
-    cmd = "bowtie2-build --large-index " + "-t " + config['b_threads'] + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name'])
+    cmd = "bowtie2-build --large-index " + "-t " + args.b_threads + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name'])
     return cmd
 
-def get_data_prefix(config)
+def get_data_prefix(config):
     f = ftplib.FTP(config['Other']['FtpURL'])#/vol1/fastq/ERR525')
     f.login()
     f.cwd(config['Other']['DataURL'])
     dirs=get_current_dir_subdirs(f)
     data_prefix=os.path.commonprefix(dirs)
-    return data_prefix
+    startind=re.match(data_prefix+"(.+)",dirs[0])
+    startind=startind.group(1)
+    return (startind,data_prefix)
 
-def generate_fetch_seq_command(config):
+def generate_fetch_seq_command(args,config):
     #let e="787";let s="688";let n="($e-$s+1)/5-1";
-    cmd="seq $s $e | parallel -j {feSeq_threads} wget -r --no-parent -P {data_path} $COHORT_URL/{data_prefix}"    
+    cmd="seq $s $e | parallel -j " + args.feSeq_threads + " wget -r --no-parent -P {data_path} $COHORT_URL/{data_prefix}"    
     return cmd.format(**config)+"{}/"
 
 def generate_fetch_ref_command(args,config):
     """Generate command for downloading reference fastas and headers."""
-    cmd = "bin/fetchSeq.py -e {email} -t True -d {ref_path} -s {fe_srch_file}"
+    cmd = "bin/fetchSeq.py -e {email} -t True -d {ref_path} -s "+ args.fe_srch_file
     return cmd.format(**config)
 
 def generate_sbatch_command(config):
     """Generate command for scheduling all sample runs."""
-    cmd = "sbatch --array={0}%6 run_sample.sh"
-    job_range = "1-{0}".format(len(project.samples))
-
+    cmd = "sbatch --array=0-{0}%6 run_sample.sh"
+    job_range = floor(config['nr_samples']/config['samples_per_node'])
     return cmd.format(job_range)
 
 def generate_collect_command(config):

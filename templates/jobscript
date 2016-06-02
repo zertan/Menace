@@ -22,21 +22,24 @@ START_IND={{ start_ind }}
 SAMPLES_PER_NODE={{ samples_per_node }}
 CPU_CORES={{ cpu_cores }}
 
-FOLDER_PREFIX={{ folder_prefix }}
+DATA_PREFIX={{ data_prefix }}
 
 mkdir $NODE_PATH/Data
 mkdir $NODE_PATH/Analysis
-mkdir $NODE_PATH/$REF_NAME
-mkdir $NODE_PATH/$REF_NAME/Index
-mkdir $NODE_PATH/$REF_NAME/Headers
+mkdir $NODE_PATH/References
+mkdir $NODE_PATH/References/Index
+mkdir $NODE_PATH/References/Headers
 mkdir $NODE_PATH/DoriC
 
 IND=$[$START_IND+$SLURM_ARRAY_TASK_ID*$SAMPLES_PER_NODE]
 
-seq $IND $[$IND+$SAMPLES_PER_NODE-1] | parallel cp $DATA_PATH/$FOLDER_PREFIX{}/* $NODE_PATH/Data
+seq $IND $[$IND+$SAMPLES_PER_NODE-1] | parallel cp $DATA_PATH/$DATA_PREFIX{}/* $NODE_PATH/Data
 
-pdcp -r $REF_PATH $NODE_PATH
-pdcp -r $DORIC_PATH $NODE_PATH
+pdcp -r $REF_PATH/Headers $NODE_PATH/References
+pdcp -r $REF_PATH/Index $NODE_PATH/References
+pdcp $REF_PATH/taxIDs.txt $NODE_PATH/References
+
+pdcp $DORIC_PATH/* $NODE_PATH/DoriC
 
 $SLURM_SUBMIT_DIR/bin/mainBuild.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_PATH
 
