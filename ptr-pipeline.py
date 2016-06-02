@@ -157,11 +157,15 @@ def get_current_dir_subdirs(f):
     ret = [x.split()[-1] for x in ret if x.startswith("d")]
     return ret 
 
-def compile_config(args,config):
-    
-    start_ind, data_prefix=get_data_prefix(config)
-
+def compile_config(args,config):    
+    start_ind1, data_prefix=get_data_prefix(config)
     email=[args.email if not args.email=="" else config['Other']['Email']]
+    if (config['Other']['StartInd']==""):
+        start_ind=start_ind1
+    else:
+        start_ind=config['Other']['StartInd']
+
+
     conf={
         'project': config['Project']['ProjectID'],
         'cluster': config['Project']['Cluster'],
@@ -183,8 +187,8 @@ def compile_config(args,config):
         'data_prefix': data_prefix,
         'start_ind': start_ind,
 
-        'ftp_url': ftp_url,
-        'data_url': data_url
+        'ftp_url': config['Other']['FtpURL'],
+        'data_url': config['Other']['DataURL']
     }
     return conf
 
@@ -239,7 +243,7 @@ def generate_jobscript(config):
 #                                  stat.S_IXGRP |
 #                                  stat.S_IXOTH))
 
-def generate_bt2_build_command(config):
+def generate_bt2_build_command(args,config):
     """Generate command for building a bowtie2 index."""
     #for file in os.listdir(os.path.join(config['Directories']['References'],'Fasta')):
         #if file.endswith(".fasta"):
@@ -264,11 +268,19 @@ def get_data_prefix(config):
     return (startind,data_prefix)
 
 def generate_fetch_seq_command(args,config):
-    #let e="787";let s="688";let n="($e-$s+1)/5-1";
-    end_ind=int(config['start_ind'])+int(config['nr_samples'])
-    url=os.path.join(config['ftp_url'],config['data_url'],config['data_prefix'])
-    cmd="echo {{start_ind}.." + end_ind + "} | parallel -j " + args.feSeq_threads + " wget --no-parent -P {data_path} " + url
-    return cmd.format(**config)+"{}"
+    nr_digits=len(config['start_ind'])
+    end_ind=int(config['start_ind'])+int(config['nr_samples'])-1
+    url=os.path.join(config['data_url'],config['data_prefix'])
+    url=config['ftp_url']+url
+    
+    if(not re.match("ftp://",url)):
+        url="ftp://"+url
+
+    cmd=" | parallel -j " + str(args.feSeq_threads) + " wget -r --no-parent -P "+ config['data_path'] + " " + url + "{}/"
+    #cmd="$(echo {"+ str(config['start_ind']) + ".." + str(end_ind) + "})"+cmd
+    cmd='seq -f %0' + str(nr_digits) + 'g ' + str(config['start_ind']) + " " + str(end_ind) + cmd
+    print(cmd)
+    return cmd
 
 def generate_fetch_ref_command(args,config):
     """Generate command for downloading reference fastas and headers."""
@@ -313,7 +325,7 @@ def main():
         process.wait()
 
     if(args.subparser_name=='full' or args.subparser_name=='build-index'):
-        process = subprocess.Popen("bin/changeTID.sh " + config['Directories']['References'], shell=True)
+        process = subprocess.Popen("bin/changeTID.sh " + config['ref_path'], shell=True)
         process.wait()
         process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
         process.wait()

@@ -10,7 +10,11 @@ do
 	LINE=$(head -1 "$1/Fasta/${arr[0]}.fasta")
 	if [[ "$LINE" =~ "^>gi*" ]]
 	then
-		sed -i "" "s/^>gi/>ti|${arr[1]}|gi/" "$1/Fasta/${arr[0]}.fasta"
+		if [[ $(uname) == 'Linux' ]]; then
+			sed -i "s/^>gi/>ti|${arr[1]}|gi/" "$1/Fasta/${arr[0]}.fasta"
+		elif [[ $(uname) == 'Darwin' ]]; then
+			sed -i "" "s/^>gi/>ti|${arr[1]}|gi/" "$1/Fasta/${arr[0]}.fasta"
+		fi
 	fi
 done < $1/taxIDs.txt
 

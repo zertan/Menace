@@ -7,7 +7,7 @@ Created on Sep 8, 2015
 import argparse
 import re
 from Bio import Entrez
-from os import listdir,environ,mkdir
+from os import listdir,environ,makedirs
 from os.path import isfile, join, exists
 from sys import exit
 from time import sleep
@@ -28,11 +28,11 @@ args = parser.parse_args()
 
 # create directories
 if not exists(args.dataPath):
-	mkdir(args.dataPath)
+	makedirs(args.dataPath)
 if not exists(join(args.dataPath,"Headers")):
-	mkdir(join(args.dataPath,"Headers"))
+	makedirs(join(args.dataPath,"Headers"))
 if not exists(join(args.dataPath,"Fasta")):
-	mkdir(join(args.dataPath,"Fasta"))
+	makedirs(join(args.dataPath,"Fasta"))
 	
 if (isfile(args.searchFile)):
 	with open(args.searchFile) as f:
