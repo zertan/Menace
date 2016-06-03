@@ -191,12 +191,14 @@ y = data[:, 1].astype(float)
 with open(sys.argv[2]+sys.argv[1][:-6]+".xml") as fd:
     obj = xmltodict.parse(fd.read())
 
-genomeLen=int(obj['eSummaryResult']['DocSum']['Item'][8]['#text'])
-bacteriaName=obj['eSummaryResult']['DocSum']['Item'][1]['#text']
+genomeLen=int(obj['DocSum']['Item'][8]['#text'])
+bacteriaName=obj['DocSum']['Item'][1]['#text']
 ### oriC
 
-oriData=DataFrame.from_csv(sys.argv[3]+"bacteria_record.dat",  sep='	',index_col=1)
-
+try:
+	oriData=DataFrame.from_csv(sys.argv[3]+"bacteria_record.dat",  sep='	',index_col=1)
+except:
+	pass
 #try:
 #	print(oriData[repr(sys.argv[1][:-6]])
 #except:

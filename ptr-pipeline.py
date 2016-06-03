@@ -70,9 +70,9 @@ def get_parser():
     #parser_s.add_argument("--opt10", action='store_true')
 
     parser_f = subparsers.add_parser('full', help='perform all the above steps')
-    parser_feSeq.add_argument("-t1", dest='feSeq_threads', help='The number of simultaneous wget processes to use.',default=1)
-    parser_b.add_argument("-t2", dest='b_threads', help='The number of cpu threads to use.',default=1)
-    parser_fe.add_argument("-s1", dest='fe_srch_file', help='A file with search strings to download.',default='./searchStrings')
+    parser_f.add_argument("-t1", dest='feSeq_threads', help='The number of simultaneous wget processes to use.',default=1)
+    parser_f.add_argument("-t2", dest='b_threads', help='The number of cpu threads to use.',default=1)
+    parser_f.add_argument("-s1", dest='fe_srch_file', help='A file with search strings to download.',default='./searchStrings')
 
     #parser_f.add_argument("-opt5", action='store_true')
     #parser_f.add_argument("--opt6", action='store_true')
@@ -254,7 +254,7 @@ def generate_bt2_build_command(args,config):
 
     #print(referenceList)
 
-    cmd = "bowtie2-build --large-index " + "-t " + args.b_threads + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name'])
+    cmd = "bowtie2-build --large-index " + "-t " + str(args.b_threads) + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name'])
     return cmd
 
 def get_data_prefix(config):
@@ -297,7 +297,8 @@ def generate_sbatch_command(config):
     return cmd.format(job_range)
 
 def generate_collect_command(config):
-    cmd="./PTRMatrix.py {data_path} {ref_path} {doric_path}"
+   	koremLoc=os.path.join(CODE_DIR,"extra/accLoc.csv") 
+	cmd="./PTRMatrix.py {data_path} {ref_path} {doric_path} " + koremLoc
     return cmd.format(**config)
 
 # def print_instructions(config):

@@ -1,0 +1,4 @@
+nohup.out
+*.stderr
+*.stdout
+jobscript

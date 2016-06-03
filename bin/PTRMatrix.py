@@ -51,10 +51,21 @@ def doublingTime(p,g):
 	print(b/(np.log2(p)/float(g)-a))
 	return float(b)/(np.log2(p)/float(g)-a)
 
-oriData=pd.DataFrame.from_csv(sys.argv[3]+"bacteria_record.dat",  sep='	',index_col=1)
-koremOriData=pd.DataFrame.from_csv(sys.argv[4],  sep=';',index_col=0)
+if(len(sys.argv) <= 1):
+	print "Usage: ./PTRMatrix.py DATA_PATH REF_PATH DORIC_PATH LOC_FILE"
+	sys.exit(1)
 
-print(koremOriData.loc['NC_016845.1','OriC'])
+if(len(sys.argv) == 3):
+	try:
+		oriData=pd.DataFrame.from_csv(join(sys.argv[3],"bacteria_record.dat"),  sep='	',index_col=1)
+	except:
+		koremOriData=pd.DataFrame.from_csv(sys.argv[3],  sep=';',index_col=0)
+
+if(len(sys.argv) == 4):
+	oriData=pd.DataFrame.from_csv(join(sys.argv[3],"bacteria_record.dat"),  sep='   ',index_col=1)
+	koremOriData=pd.DataFrame.from_csv(sys.argv[4],  sep=';',index_col=0)
+
+#print(koremOriData.loc['NC_016845.1','OriC'])
 
 #oTable=pd.DataFrame(columns=[ f for f in listdir(sys.argv[1]) if isdir(join(sys.argv[1],f)) ])
 oTable=pd.DataFrame()
@@ -77,11 +88,11 @@ with open(join(sys.argv[2],'taxIDs.txt'), mode='r') as infile:
 	for rows in reader:
 #		print(str(rows))
 		if (not rows[1]):
-			with open(join(sys.argv[2],rows[0]+".xml")) as fd:
+			with open(join(sys.argv[2],'Headers',rows[0]+".xml")) as fd:
 				obj = xmltodict.parse(fd.read())
 				#print(str(obj['eSummaryResult']['DocSum']['Item'][7]['#text']))
-				bacteriaName[str(obj['eSummaryResult']['DocSum']['Item'][7]['#text'])]=str(obj['eSummaryResult']['DocSum']['Item'][1]['#text'])
-				bacNameAcc[rows[0]]=str(obj['eSummaryResult']['DocSum']['Item'][1]['#text'])
+				bacteriaName[str(obj['DocSum']['Item'][7]['#text'])]=str(obj['DocSum']['Item'][1]['#text'])
+				bacNameAcc[rows[0]]=str(obj['DocSum']['Item'][1]['#text'])
 		else:
 			bacteriaName[rows[1]]=rows[2]
 			bacNameAcc[rows[0]]=rows[2]
@@ -124,11 +135,11 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 				try:
 					tmp=headerTable.loc[ACC]
 				except:
-					with open(join(sys.argv[2],ACC+".xml")) as fd:
+					with open(join(sys.argv[2],'Headers',ACC+".xml")) as fd:
 						obj = xmltodict.parse(fd.read())
 
-						genomeLen=int(obj['eSummaryResult']['DocSum']['Item'][8]['#text'])
-						bacteriaName2=obj['eSummaryResult']['DocSum']['Item'][1]['#text']
+						genomeLen=int(obj['DocSum']['Item'][8]['#text'])
+						bacteriaName2=obj['DocSum']['Item'][1]['#text']
 					headerTable.loc[ACC,'Name']=bacteriaName2
 					headerTable.loc[ACC,'Species Name']=bacNameAcc[ACC]
 					headerTable.loc[ACC,'Length']=genomeLen
