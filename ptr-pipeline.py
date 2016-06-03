@@ -276,7 +276,7 @@ def generate_fetch_seq_command(args,config):
     if(not re.match("ftp://",url)):
         url="ftp://"+url
 
-    cmd=" | parallel -j " + str(args.feSeq_threads) + " wget -r -nH -np -nd -R index.html* -P " + config['data_path'] + " " + url + "{}/"
+    cmd=" | parallel -j " + str(args.feSeq_threads) + " wget -c -r -nH -np -nd -R index.html* -P " + config['data_path'] + " " + url + "{}/"
     #cmd="$(echo {"+ str(config['start_ind']) + ".." + str(end_ind) + "})"+cmd
     cmd='seq -f %0' + str(nr_digits) + 'g ' + str(config['start_ind']) + " " + str(end_ind) + cmd
     return cmd
@@ -297,9 +297,9 @@ def generate_sbatch_command(config):
     return cmd.format(job_range)
 
 def generate_collect_command(config):
-   	koremLoc=os.path.join(CODE_DIR,"extra/accLoc.csv") 
-	cmd="./PTRMatrix.py {data_path} {ref_path} {doric_path} " + koremLoc
-    return cmd.format(**config)
+	koremLoc=os.path.join(CODE_DIR,"extra/accLoc.csv") 
+	cmd="bin/PTRMatrix.py {output_path} {ref_path} {doric_path} " + koremLoc
+	return cmd.format(**config)
 
 # def print_instructions(config):
 #     """Print instructions for executing pipeline."""
@@ -316,33 +316,33 @@ def generate_collect_command(config):
 #     print("")
 
 def main():
-    args = parse_args(sys.argv[1:])
-    config = read_config(args)
-    config = compile_config(args,config)
+	args = parse_args(sys.argv[1:])
+	config = read_config(args)
+	config = compile_config(args,config)
 
-    if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
-        process = subprocess.Popen(generate_fetch_seq_command(args,config), shell=True)
-        process.wait()
+	if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
+		process = subprocess.Popen(generate_fetch_seq_command(args,config), shell=True)
+		process.wait()
 
-    if(args.subparser_name=='full' or args.subparser_name=='fetch-references'):
-        process = subprocess.Popen(generate_fetch_ref_command(args,config), shell=True)
-        process.wait()
+	if(args.subparser_name=='full' or args.subparser_name=='fetch-references'):
+		process = subprocess.Popen(generate_fetch_ref_command(args,config), shell=True)
+		process.wait()
 
-    if(args.subparser_name=='full' or args.subparser_name=='build-index'):
-        process = subprocess.Popen("bin/changeTID.sh " + config['ref_path'], shell=True)
-        process.wait()
-        process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
-        process.wait()
+	if(args.subparser_name=='full' or args.subparser_name=='build-index'):
+		process = subprocess.Popen("bin/changeTID.sh " + config['ref_path'], shell=True)
+		process.wait()
+		process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
+		process.wait()
 
-    if(args.subparser_name=='full' or args.subparser_name=='make'):
-        generate_jobscript(config)
+	if(args.subparser_name=='full' or args.subparser_name=='make'):
+		generate_jobscript(config)
 
-    if(args.subparser_name=='full' or args.subparser_name=='submit'):
-        process = subprocess.Popen(generate_sbatch_command(config), shell=True)
+	if(args.subparser_name=='full' or args.subparser_name=='submit'):
+		process = subprocess.Popen(generate_sbatch_command(config), shell=True)
 
-    if(args.subparser_name=='collect'):
-        process = subprocess.Popen(generate_collect_command(config), shell=True)
-
+	if(args.subparser_name=='collect'):
+		process = subprocess.Popen(generate_collect_command(config), shell=True)
+		process.wait()
     # prov = provider.get_provider(args['provider_name'], args['project_dir'])
     # p = project.Project(args, prov)
     # p.verify_directory_structure()

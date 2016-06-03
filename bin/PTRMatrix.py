@@ -52,7 +52,7 @@ def doublingTime(p,g):
 	return float(b)/(np.log2(p)/float(g)-a)
 
 if(len(sys.argv) <= 1):
-	print "Usage: ./PTRMatrix.py DATA_PATH REF_PATH DORIC_PATH LOC_FILE"
+	print("Usage: ./PTRMatrix.py DATA_PATH REF_PATH DORIC_PATH LOC_FILE")
 	sys.exit(1)
 
 if(len(sys.argv) == 3):
@@ -82,7 +82,7 @@ abundanceTable=pd.DataFrame()
 #bacteriaName = dict (zip(taxIDs.values(),taxIDs.keys()))
 
 with open(join(sys.argv[2],'taxIDs.txt'), mode='r') as infile:
-	reader = csv.reader(infile,delimiter=';')
+	reader = csv.reader(infile,delimiter='	')
 	bacteriaName={}
 	bacNameAcc={}
 	for rows in reader:
@@ -109,6 +109,7 @@ print("Traversing directories and generating tables, please wait.")
 for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 	folderName=dirpath[-9:]
 	for fn in filenames:
+		print(fn)
 		#if (fn.endswith('coverage.csv')):
 		#	tmpTable=pd.read_csv(join(sys.argv[1],dirpath,fn),delimiter=' ',index_col=0,usecols=[0,1])
 		#	for ACC in tmpTable.index.values:
@@ -122,8 +123,8 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 					#print(bacteriaName[ti[3:]])
 					abundanceTable.loc[ti[3:],'Name']=bacteriaName[ti[3:]]
 					abundanceTable.loc[ti[3:],folderName]=float(tmpTable.loc[ti])
-				except KeyError, e:
-					print 'IndexError - "%s"' % str(e)
+				except KeyError as e:
+					print('IndexError - "%s"' % str(e))
 					
 					
 		if (fn.endswith('.depth.best.npy')):
@@ -132,6 +133,7 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 				#data=pd.read_csv(join(sys.argv[1],folderName,fn),delimiter=" ")
 				vec=np.load(join(sys.argv[1],dirpath,fn))
 				#dataVec=np.load(join(sys.argv[1],dirpath,ACC+'.depth.npy'))
+				print("load")
 				try:
 					tmp=headerTable.loc[ACC]
 				except:
@@ -166,6 +168,8 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
             
 			oTable.loc[ACC,folderName]=vec[0]
 			tTable.loc[ACC,folderName]=vec[1]
+
+print(headerTable.values)
 
 
 lenVec=headerTable['Length'].values
