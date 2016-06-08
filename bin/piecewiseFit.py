@@ -11,6 +11,7 @@ import pandas
 from pandas import DataFrame
 import matplotlib.pyplot as plt
 import xmltodict
+import os
 
 def chunks(l, n):
 	"""Yield successive n-sized chunks from l."""
@@ -188,7 +189,7 @@ x = data[:, 0]-1
 y = data[:, 1].astype(float)
 
 
-with open(sys.argv[2]+sys.argv[1][:-6]+".xml") as fd:
+with open(os.path.join(sys.argv[2],sys.argv[1][:-6]+".xml"))) as fd:
     obj = xmltodict.parse(fd.read())
 
 genomeLen=int(obj['DocSum']['Item'][8]['#text'])
@@ -196,7 +197,7 @@ bacteriaName=obj['DocSum']['Item'][1]['#text']
 ### oriC
 
 try:
-	oriData=DataFrame.from_csv(sys.argv[3]+"bacteria_record.dat",  sep='	',index_col=1)
+	oriData=DataFrame.from_csv(os.path.join(sys.argv[3],"bacteria_record.dat"),  sep='	',index_col=1)
 except:
 	pass
 #try:
