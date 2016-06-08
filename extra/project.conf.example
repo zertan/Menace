@@ -1,5 +1,5 @@
 [Project]
-ProjectID=SNIC2015-1-450
+ProjectID=SNIC2016-1-188
 JobName=PTR-Pipeline
 Cluster=hebbe
 JobNodes=1
@@ -7,17 +7,17 @@ CpuCores=16
 EstimatedTime=04:00:00
 
 [Directories]
-Data=/Users/user/Data
-References=/Users/user/Reference
-Output=/Users/user/Output
-Doric=/USers/user/DoriC
+Data=/c3se/NOBACKUP/users/hedani/Data/ERR525
+References=/c3se/NOBACKUP/users/hedani/Data/References/NCBI/bacSmall
+Output=$SNIC_NOBACKUP/Data/bacSmallOut
+Doric=$SNIC_NOBACKUP/Data/References/DoriC
 Node=$TMPDIR
 
 [Other]
-RefName=bacteriaRef
-NrSamples=100
+RefName=bacSmall
+NrSamples=3
 SamplesPerNode=5
-Email=user@domain.com
+Email=hedani@chalmers.se
 FtpURL=ftp.sra.ebi.ac.uk
 DataURL=/vol1/fastq/ERR525
 StartInd=688

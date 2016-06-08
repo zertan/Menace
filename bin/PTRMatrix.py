@@ -19,10 +19,11 @@ from os.path import isdir, join
 #onlyfiles = [ f for f in listdir(sys.argv[1]) if isfile(join(mypath,f)) ]
 
 from os import walk
+from os import makedirs
 import csv
 from numpy import matlib
 
-import pickle
+#import pickle
 
 def circularMedian(p,g):
 	def tmFun():	
@@ -46,9 +47,9 @@ def growthRate(p,g):
 def doublingTime(p,g):
 	a=-4.602311
 	b=1050.197
-	print(a)
-	print(b)
-	print(b/(np.log2(p)/float(g)-a))
+	#print(a)
+	#print(b)
+	#print(b/(np.log2(p)/float(g)-a))
 	return float(b)/(np.log2(p)/float(g)-a)
 
 if(len(sys.argv) <= 1):
@@ -109,7 +110,7 @@ print("Traversing directories and generating tables, please wait.")
 for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 	folderName=dirpath[-9:]
 	for fn in filenames:
-		print(fn)
+		#print(fn)
 		#if (fn.endswith('coverage.csv')):
 		#	tmpTable=pd.read_csv(join(sys.argv[1],dirpath,fn),delimiter=' ',index_col=0,usecols=[0,1])
 		#	for ACC in tmpTable.index.values:
@@ -133,7 +134,7 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 				#data=pd.read_csv(join(sys.argv[1],folderName,fn),delimiter=" ")
 				vec=np.load(join(sys.argv[1],dirpath,fn))
 				#dataVec=np.load(join(sys.argv[1],dirpath,ACC+'.depth.npy'))
-				print("load")
+				#print("load")
 				try:
 					tmp=headerTable.loc[ACC]
 				except:
@@ -218,7 +219,7 @@ headerTable=headerTable[res]
 #sys.quit()
 print(oTable.to_string(max_rows=1000))
 #print(headerTable.to_string)
-headerTable=headerTable.sort_values('Name')
+headerTable=headerTable.sort('Name')
 print(headerTable.to_string(max_rows=1000))
 
 
@@ -276,9 +277,9 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 #print(np.array_str(ot2[ot2i]))
 #df = df[[]]
 
-ptrTable=ptrTable.sort_values('Name')
+ptrTable=ptrTable.sort('Name')
 ptrTable=ptrTable.sort_index(axis=1)
-#ptrTable=tauTable.sort_values('Name')
+#ptrTable=tauTable.sort('Name')
 #ptrTable=tauTable.sort_index(axis=1)
 
 #print(str(doublingTime(1.3,6000000)))
@@ -293,7 +294,7 @@ ptrTable=ptrTable.sort_index(axis=1)
 #print(ptrTable.to_string)
 try:
 	abTable=abundanceTable[abundanceTable['Name'].isin(ptrTable['Name'])]
-	abTable=abTable.sort_values('Name')
+	abTable=abTable.sort('Name')
 	abTable=abTable.sort_index(axis=1)
 	abTable.to_csv('AbundancePTR.csv',sep=";")
 except:
@@ -301,7 +302,7 @@ except:
 
 #try:
 #	covTable=covTable[covTable['Name'].isin(ptrTable['Name'])]
-#	covTable=covTable.sort_values('Name')
+#	covTable=covTable.sort('Name')
 #	covTable=covTable.sort_index(axis=1)
 #	covTable.to_csv('AnalysisCov.csv',sep=";")
 #except:
@@ -313,14 +314,21 @@ except:
 
 print("\n"+ptrTable.to_string(index=False))
 
-tauTable=tauTable.sort_values('Name')
+tauTable=tauTable.sort('Name')
 tauTable=tauTable.sort_index(axis=1)
 #covTable=covTable.sort_index(axis=1)
 
-headerTable.to_csv('AnalysisHeaderOut.csv',sep=";")
-ptrTable.to_csv('AnalysisPTROut.csv',sep=";",index=False)
-tauTable.to_csv('AnalysisDoublingTimeOut.csv',sep=";",index=False)
-abundanceTable.to_csv('Abundance.csv',sep=";",index=False)
+try:
+	makedirs('collect')
+except:
+	pass
+
+headerTable.to_csv('collect/Header.csv',sep=";")
+ptrTable.to_csv('collect/PTR.csv',sep=";",index=False)
+tauTable.to_csv('collect/DoublingTime.csv',sep=";",index=False)
+abundanceTable.to_csv('collect/Abundance.csv',sep=";",index=False)
+
+print("\nOutput stored in ./collect")
 #plt.plot(y, 'r-')
 #plt.savefig("asd.png")
 

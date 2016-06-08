@@ -2,3 +2,4 @@ nohup.out
 *.stderr
 *.stdout
 jobscript
+collect

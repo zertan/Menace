@@ -1,3 +1,6 @@
 Biopython
 jinja2
-urllib
+xmltodict
+pandas
+numpy
+scipy

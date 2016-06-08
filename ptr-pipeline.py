@@ -14,7 +14,7 @@ import sys
 import subprocess
 import ftplib
 import re
-from math import floor
+from math import ceil
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -25,7 +25,7 @@ DEFAULT_CONFIG = os.path.join(CODE_DIR, "project.conf")
 
 def read_config(args):
     """Read project config."""
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(allow_no_value=True, inline_comment_prefixes=(';',))
     config.read(args.config_file)
 
     if type(args.email) is str:
@@ -51,7 +51,7 @@ def get_parser():
 
     subparsers = parser.add_subparsers(dest='subparser_name')
 
-    parser_feSeq = subparsers.add_parser('fetch-data', help='download references from NCBI')
+    parser_feSeq = subparsers.add_parser('fetch-data', help='download metagenomic sequences (using FTP)')
     parser_feSeq.add_argument("-t", dest='feSeq_threads', help='The number of simultaneous wget processes to use.',default=1)
     
 
@@ -159,7 +159,7 @@ def get_current_dir_subdirs(f):
 
 def compile_config(args,config):    
     start_ind1, data_prefix=get_data_prefix(config)
-    email=[args.email if not args.email=="" else config['Other']['Email']]
+    email=args.email if args.email else config['Other']['Email']
     if (config['Other']['StartInd']==""):
         start_ind=start_ind1
     else:
@@ -219,7 +219,7 @@ def generate_jobscript(config):
 
             ref_name=config['ref_name'],
             nr_samples=config['nr_samples'],
-            samples_per_node=config['samples_per_node'],
+            samples_per_node=min(int(config['samples_per_node']),int(config['nr_samples'])),
             email=config['email'],
             data_prefix=config['data_prefix'],
             start_ind=config['start_ind']
@@ -258,7 +258,7 @@ def generate_bt2_build_command(args,config):
     return cmd
 
 def get_data_prefix(config):
-    f = ftplib.FTP(config['Other']['FtpURL'])#/vol1/fastq/ERR525')
+    f = ftplib.FTP(config['Other']['FtpURL'])
     f.login()
     f.cwd(config['Other']['DataURL'])
     dirs=get_current_dir_subdirs(f)
@@ -268,18 +268,19 @@ def get_data_prefix(config):
     return (startind,data_prefix)
 
 def generate_fetch_seq_command(args,config):
-    nr_digits=len(config['start_ind'])
-    end_ind=int(config['start_ind'])+int(config['nr_samples'])-1
-    url=os.path.join(config['data_url'],config['data_prefix'])
-    url=config['ftp_url']+url
+	nr_digits=len(config['start_ind'])
+	end_ind=int(config['start_ind'])+int(config['nr_samples'])-1
+	url=os.path.join(config['data_url'],config['data_prefix'])
+	url=config['ftp_url']+url
     
-    if(not re.match("ftp://",url)):
-        url="ftp://"+url
+	if(not re.match("ftp://",url)):
+		url="ftp://"+url
 
-    cmd=" | parallel -j " + str(args.feSeq_threads) + " wget -c -r -nH -np -nd -R index.html* -P " + config['data_path'] + " " + url + "{}/"
-    #cmd="$(echo {"+ str(config['start_ind']) + ".." + str(end_ind) + "})"+cmd
-    cmd='seq -f %0' + str(nr_digits) + 'g ' + str(config['start_ind']) + " " + str(end_ind) + cmd
-    return cmd
+	cmd=" | parallel -j " + str(args.feSeq_threads) + " wget -c -r -nH -np -nd -R index.html* -P " + config['data_path'] + " " + url + "{}/"
+	#cmd="$(echo {"+ str(config['start_ind']) + ".." + str(end_ind) + "})"+cmd
+	cmd='seq -f %0' + str(nr_digits) + 'g ' + str(config['start_ind']) + " " + str(end_ind) + cmd
+	#print(cmd)
+	return cmd
 
 def generate_fetch_ref_command(args,config):
     """Generate command for downloading reference fastas and headers."""
@@ -289,11 +290,8 @@ def generate_fetch_ref_command(args,config):
 def generate_sbatch_command(config):
     """Generate command for scheduling all sample runs."""
     cmd = "sbatch --array=0-{0} jobscript"
-    minus=0
-    if(int(config['samples_per_node'])==1):
-        minus=1
-
-    job_range = int(floor(float(config['nr_samples'])/float(config['samples_per_node'])))-minus
+	
+    job_range = ceil(float(config['nr_samples'])/float(config['samples_per_node']))-1
     return cmd.format(job_range)
 
 def generate_collect_command(config):
@@ -331,14 +329,17 @@ def main():
 	if(args.subparser_name=='full' or args.subparser_name=='build-index'):
 		process = subprocess.Popen("bin/changeTID.sh " + config['ref_path'], shell=True)
 		process.wait()
-		process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
-		process.wait()
+		if( not [ os.listdir(os.path.join(config['ref_path'],"Index")) ]): # and args.subparser_name=='full'):	
+			process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
+			process.wait()
 
 	if(args.subparser_name=='full' or args.subparser_name=='make'):
 		generate_jobscript(config)
+		process.wait()
 
 	if(args.subparser_name=='full' or args.subparser_name=='submit'):
 		process = subprocess.Popen(generate_sbatch_command(config), shell=True)
+		process.wait()
 
 	if(args.subparser_name=='collect'):
 		process = subprocess.Popen(generate_collect_command(config), shell=True)

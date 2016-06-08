@@ -136,6 +136,7 @@ if (args.taxBool==True):
 	fetchHandle.close()
 
 	orgIdArr=[]
+	ortNameArr=[]
 
 	for i,record in enumerate(records):
 		lineage = record['LineageEx'] # get the entire lineage of the first record
@@ -143,18 +144,21 @@ if (args.taxBool==True):
 		#print(lineage)
 		
 		tmpId=lineage[-1]['TaxId']
+		tmpName=lineage[-1]['ScientificName']
 		for entry in lineage:
 			if entry['Rank'] == 'species':
 				#print(entry) # prints: {u'ScientificName': 'Viridiplantae', u'TaxId': '33090', u'Rank': 'kingdom '}
 				tmpId=entry['TaxId']
+				tmpName=entry['ScientificName']
 		
 		orgIdArr.append(tmpId)
+		orgNameArr.append(tmpName)
 	
 	outHandle = open(join(args.dataPath,"taxIDs.txt"), "w")
 
 	#outHandle.write("ACC"+"\tOrg"+"\tStr"+"\n")
 	for i, searchStr in enumerate(inputString):	
-		outHandle.write(searchStr+"\t"+orgIdArr[i]+"\t"+tIdArr[i]+"\n")	
+		outHandle.write(searchStr+"\t"+orgIdArr[i]+"\t"+orgNameArr[i]+"\n")	
 				
 	outHandle.close()
 

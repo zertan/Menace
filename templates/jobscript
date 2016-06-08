@@ -39,7 +39,7 @@ pdcp -r $REF_PATH/Headers $NODE_PATH/References
 pdcp -r $REF_PATH/Index $NODE_PATH/References
 pdcp $REF_PATH/taxIDs.txt $NODE_PATH/References
 
-pdcp $DORIC_PATH/* $NODE_PATH/DoriC
+pdcp $DORIC_PATH/bacteria_record.dat $NODE_PATH/DoriC
 
 $SLURM_SUBMIT_DIR/bin/mainBuild.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_PATH
 
