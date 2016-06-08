@@ -3,4 +3,4 @@ scipy
 pandas
 xmltodict
 lmfit
--e git@github.com:PathoScope/PathoScope.git#egg=pathoscope
+-e git+git@github.com:PathoScope/PathoScope.git#egg=pathoscope
