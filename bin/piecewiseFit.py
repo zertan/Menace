@@ -189,7 +189,7 @@ x = data[:, 0]-1
 y = data[:, 1].astype(float)
 
 
-with open(os.path.join(sys.argv[2],sys.argv[1][:-6]+".xml"))) as fd:
+with open(os.path.join(sys.argv[2],sys.argv[1][:-6]+".xml")) as fd:
     obj = xmltodict.parse(fd.read())
 
 genomeLen=int(obj['DocSum']['Item'][8]['#text'])

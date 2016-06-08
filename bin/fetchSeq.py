@@ -96,7 +96,7 @@ queryKey = idResults["QueryKey"]
 
 # get sequences from Entrez in chunks of 40 (default)
 for ind, searchStrings in enumerate(inputStringChunks):
-	print("Fetching batch " +repr(ind+1)+ " to "+str(args.dataPath))
+	print("Fetching batch " +repr(ind+1))
 	fetchHandle = Entrez.efetch(db="nuccore", query_key=queryKey,WebEnv=webenv,rettype="fasta",retmode="text",retstart=repr(ind*args.fetchNr),retmax=repr(args.fetchNr))
 	data = fetchHandle.read()
 	fetchHandle.close()
@@ -104,7 +104,7 @@ for ind, searchStrings in enumerate(inputStringChunks):
 	data=data.split('>')
 	data=data[1:]
 
-	print("Writing batch " +repr(ind+1)+ " to "+str(args.dataPath))
+	print("Writing batch " +repr(ind+1))
 	for i, searchStr in enumerate(searchStrings):
 		outHandle = open(join(args.dataPath,"Fasta",searchStr+".fasta"), "w")
 		outHandle.write(">"+data[i])
