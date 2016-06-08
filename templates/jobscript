@@ -21,6 +21,7 @@ REF_NAME={{ ref_name }}
 START_IND={{ start_ind }}
 SAMPLES_PER_NODE={{ samples_per_node }}
 CPU_CORES={{ cpu_cores }}
+JOB_RANGE={{ job_range }}
 
 DATA_PREFIX={{ data_prefix }}
 
@@ -46,5 +47,6 @@ $SLURM_SUBMIT_DIR/bin/mainBuild.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_
 mkdir -p $OUTPUT_PATH
 
 rpdcp -r $NODE_PATH/Data $OUTPUT_PATH
+
 
 # End script

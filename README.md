@@ -40,6 +40,7 @@ This utility can be used to download '.fasta' reference files from the NCBI serv
 **output:** {reference.fasta}, {reference.xml}, taxIDs.txt
 
 ## Installation:
+Make sure that "pip" is the PyPi command of your *python2* installation, then:
 
 #### Git
 ```bash
@@ -51,9 +52,9 @@ pip install --user requirements.txt
 
 This should install the below *python* dependencies. The other dependencies have to be installed manually (if you have questions about this I suggest you consult your cluster IT help desk).
 
-Note that this software uses python3 for tasks executed by the user ("./ptr-pipeline.py") **and** python2 for tasks running on the cluster.
+Note that this software uses python3 for tasks executed by the user ("./ptr-pipeline.py") and python2 for tasks running on the cluster.
 
-The software has been tested on the "hebbe" cluster at C3SE which uses the "slurm" system for resource management (thus slurm is the only queueing system currently supported).
+The software has been tested on the "hebbe" cluster at [C3SE](c3se.chalmers.se) which uses the "slurm" system for resource management (thus slurm is the only queueing system currently supported).
 
 ### Dependencies:
 
@@ -83,27 +84,29 @@ lmfit
 
 [bowtie2](https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.9/)
 
-[Pathoscope 2.0](https://sourceforge.net/projects/pathoscope/files/?source=navbar)
+[Pathoscope 2.0](https://sourceforge.net/projects/pathoscope/files/?source=navbar) (should be installed by the above pip command but make sure 'pathoscope ID' is accessible in the shell, ie. is on the system path)
 
 [parallel](http://www.gnu.org/software/parallel/)
 
 [DoriC](http://tubic.tju.edu.cn/doric/download.php) is a databse of chromosome origin locations (OriCs) which is a (recommended) optional dependency for the pipeline. Please visit the link and enter your e-mail to download.
 
 ## Usage
-1. Identify a set of NCBI genome reference accession numbers and put them in "./searchStrings" (or use the default one which includes references to bacteria common in the human gut).
+1. Identify a set of NCBI genome reference accession numbers and put them in "./searchStrings" (or use the default one which includes a *minimal* set of references to bacteria common in the human gut).
 
-2. Identify a metagenomic cohort of interest (download manually or add URLs as described below).
+2. Identify a metagenomic cohort of interest (download manually or add URLs as described below). Supported input: raw/gzipped/bzipped ".fastq" files.
 
 3. Add information to the `project.conf` file.
 
 4. Edit `bin/loadmodules.sh` to include the **python2** module of the cluster (or comment out the lines if python2 is accessible by default). 
 
-5. Load **python3** in your submit environment. Run `./ptr-pipeline.py full`. 
+5. Load **python3** in your submit environment. Run `./ptr-pipeline.py full` (use "nohup {cmd} &" to keep alive after logout). 
 
 6. Wait for job to complete. Run `./ptr-pipeline.py collect`.
 
 #### Notes
 The ptr-pipeline.py script is a common utility for all parts of the pipeline including downloading of references and metagenomic data, bulding a reference index, setting up the necessary file structure and submitting to slurm. Hence, all configuration is intended to be set up in project.conf (please see `bin/project.conf.example` for an example).
+
+The default 'searchStrings' will most probably not fit your purposes but is only an example. A more comprehensive Reference library will yield higher coverage and better PTR values. A more comprehensive list of human gut bacteria is available at'extra/referenceACClong.txt'.
 
 Note that `./ptr-pipeline.py` is python3 while the actual pipeline scripts (running on the cluster) are python2. Be sure to install pathoscope for your python2 environment.
 

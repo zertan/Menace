@@ -136,7 +136,7 @@ if (args.taxBool==True):
 	fetchHandle.close()
 
 	orgIdArr=[]
-	ortNameArr=[]
+	orgNameArr=[]
 
 	for i,record in enumerate(records):
 		lineage = record['LineageEx'] # get the entire lineage of the first record

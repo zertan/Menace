@@ -164,8 +164,8 @@ def compile_config(args,config):
         start_ind=start_ind1
     else:
         start_ind=config['Other']['StartInd']
-
-
+	
+    job_range = ceil(float(config['Other']['NrSamples'])/float(config['Other']['SamplesPerNode']))-1
     conf={
         'project': config['Project']['ProjectID'],
         'cluster': config['Project']['Cluster'],
@@ -186,6 +186,7 @@ def compile_config(args,config):
         'email': email,
         'data_prefix': data_prefix,
         'start_ind': start_ind,
+		'job_range': job_range,
 
         'ftp_url': config['Other']['FtpURL'],
         'data_url': config['Other']['DataURL']
@@ -222,7 +223,8 @@ def generate_jobscript(config):
             samples_per_node=min(int(config['samples_per_node']),int(config['nr_samples'])),
             email=config['email'],
             data_prefix=config['data_prefix'],
-            start_ind=config['start_ind']
+            start_ind=config['start_ind'],
+			job_range=config['job_range']
         )
         f.write(output)
 
@@ -290,9 +292,7 @@ def generate_fetch_ref_command(args,config):
 def generate_sbatch_command(config):
     """Generate command for scheduling all sample runs."""
     cmd = "sbatch --array=0-{0} jobscript"
-	
-    job_range = ceil(float(config['nr_samples'])/float(config['samples_per_node']))-1
-    return cmd.format(job_range)
+    return cmd.format(config['job_range'])
 
 def generate_collect_command(config):
 	koremLoc=os.path.join(CODE_DIR,"extra/accLoc.csv") 
@@ -329,13 +329,20 @@ def main():
 	if(args.subparser_name=='full' or args.subparser_name=='build-index'):
 		process = subprocess.Popen("bin/changeTID.sh " + config['ref_path'], shell=True)
 		process.wait()
-		if( not [ os.listdir(os.path.join(config['ref_path'],"Index")) ]): # and args.subparser_name=='full'):	
+		
+		tmp_dir=os.path.join(config['ref_path'],"Index")
+		
+		if (not os.path.isdir(tmp_dir)):
+			os.makedirs(tmp_dir)
+		
+		if(  os.listdir(tmp_dir)!=[] and args.subparser_name=='full'):	
+			pass
+		else:
 			process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
 			process.wait()
 
 	if(args.subparser_name=='full' or args.subparser_name=='make'):
 		generate_jobscript(config)
-		process.wait()
 
 	if(args.subparser_name=='full' or args.subparser_name=='submit'):
 		process = subprocess.Popen(generate_sbatch_command(config), shell=True)
