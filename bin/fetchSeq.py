@@ -29,7 +29,7 @@ args = parser.parse_args()
 # create directories
 if not exists(args.dataPath):
 	makedirs(args.dataPath)
-if (not exists(join(args.dataPath,"Headers")) and taxBool):
+if (not exists(join(args.dataPath,"Headers")) and args.taxBool):
 	makedirs(join(args.dataPath,"Headers"))
 if not exists(join(args.dataPath,"Fasta")):
 	makedirs(join(args.dataPath,"Fasta"))
@@ -171,4 +171,4 @@ if (args.taxBool==True):
 	outHandle.close()
 
 print("\nNon found strings:")
-print('\n'.join(errorStrings))
+print('\n'.join(errorString))
