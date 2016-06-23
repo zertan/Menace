@@ -251,12 +251,13 @@ def generate_bt2_build_command(args,config):
         #if file.endswith(".fasta"):
         #    print(file)
     d=os.path.join(config['ref_path'],'Fasta');
-    files=[os.path.join(d, f) for f in os.listdir(d)]
+    files=[f for f in os.listdir(d)]
     referenceList=",".join(files)
+    #os.environ['reflist'] = referenceList
+    #proc = subprocess.Popen("for f in " + d + "/*.fasta" + '; do cat "$f" >> tmpfasta', shell=True)
+	#print(referenceList)
 
-    #print(referenceList)
-
-    cmd = "bowtie2-build --large-index " + "-t " + str(args.b_threads) + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name'])
+    cmd = "(cd " + d + " && bowtie2-build --large-index " + "-t " + str(args.b_threads) + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
     return cmd
 
 def get_data_prefix(config):

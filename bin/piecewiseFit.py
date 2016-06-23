@@ -185,9 +185,6 @@ except IOError as e:
 	sys.exit()
 
 data=np.array(data).astype('int32')
-x = data[:, 0]-1
-y = data[:, 1].astype(float)
-
 
 with open(os.path.join(sys.argv[2],sys.argv[1][:-6]+".xml")) as fd:
     obj = xmltodict.parse(fd.read())
@@ -200,6 +197,16 @@ try:
 	oriData=DataFrame.from_csv(os.path.join(sys.argv[3],"bacteria_record.dat"),  sep='	',index_col=1)
 except:
 	pass
+
+if(data.shape[1]==1):
+	x = np.arange(1,genomeLen)-1
+	yr = data[:, 0].astype(float)
+elif(data.shape[1]==2):
+	x = data[:, 0]-1
+	y = data[:, 1].astype(float)
+	yr = np.zeros(genomeLen)
+	yr[x] = y
+
 #try:
 #	print(oriData[repr(sys.argv[1][:-6]])
 #except:
@@ -212,7 +219,7 @@ except:
 
 #print(oriData.index)
 
-coveragePercentage=np.sum(y)/genomeLen
+coveragePercentage=np.sum(yr)/genomeLen
 
 if (coveragePercentage<0.05):
 	print(sys.argv[1]+": Coverage too low, exiting.")
@@ -221,9 +228,9 @@ if (coveragePercentage<0.05):
 #doric=np.loadtxt(sys.argv[1],delimiter=" ")
 #doric=np.array(data).astype('int32')
 
-yr=np.zeros(genomeLen)
+#yr=np.zeros(genomeLen)
 #yr=yr*np.mean(y)
-yr[x]=y
+#yr[x]=y
 
 # Hermansson filter outliers in initial y vector
 # exit if too many bins are empty

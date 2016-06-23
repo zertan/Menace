@@ -5,8 +5,8 @@
 #SBATCH -N {{ job_nodes}}
 #SBATCH -n {{ cpu_cores }}
 #SBATCH -t {{ estimated_time }}
-#SBATCH -o output.%A_%a.stdout
-#SBATCH -e output.%A_%a.stderr
+#SBATCH -o logs/output.%A_%a.stdout
+#SBATCH -e logs/output.%A_%a.stderr
 #SBATCH --mail-type=END
 #SBATCH --mail-user={{ email }}
 
@@ -16,6 +16,7 @@ NODE_PATH={{ node_path }}
 REF_PATH={{ ref_path }}
 DATA_PATH={{ data_path }}
 OUTPUT_PATH={{ output_path }}
+DORIC_PATH={{ doric_path }}
 
 REF_NAME={{ ref_name }}
 START_IND={{ start_ind }}

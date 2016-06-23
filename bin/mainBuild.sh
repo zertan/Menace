@@ -17,7 +17,7 @@ DORICPATH=$NODEPATH/DoriC
 echo "Running alignment stage"
 cd $DATAPATH
 
-# pick up .gz or .bz2 files and prune file ending
+# pick up .gz, .bz2 or .fastq files and prune file ending
 declare -a files
 
 shopt -s nullglob
@@ -59,23 +59,37 @@ for RUNNAME in "${files[@]}"; do
     bamtools split -in $RUNNAME.sorted.bam -reference
     mv $RUNNAME.sorted.bam ../
 
+	files=( *.bam )
+	for f in "${files[@]}"; do
+		mv $f $(echo $f | sed -r 's/.+(N[CT]_[0-9]{6}\.[0-9]+).+/\1\.bam/')
+	done
+
     echo "$RUNNAME: Calculating coverage"
-    parallel samtools mpileup -q14 {} '>' {.}.depth ::: *.bam
-    rm -f *.bam
+	perl -v
+    rc=$?; 
+	if [[ $rc != 0 ]]; then 
+		parallel samtools mpileup -q8 {} '>' {.}.d ::: *.bam
+		parallel "cat {} | awk '{print \$2,\$4}' > {}epth"  ::: *.d
+		rm -f *.d
+	else
+		parallel samtools view -@ $CPUCORES -q8 -o {.}.sam {} ::: *.bam
+		parallel $SCRIPTPATH/bin/interp.pl {} $REFPATH/Headers/{.}.xml '>' {.}.depth ::: *.sam
+		rm -f *.sam
+	fi
+	rm -f *.bam
 
-    echo "$RUNNAME: Performing prefit work"
+    #echo "$RUNNAME: Performing prefit work"
 
-    parallel "cat {} | awk '{print \$2,\$4}' > {}2"  ::: *.depth
+    #parallel "cat {} | awk '{print \$2,\$4}' > {}2"  ::: *.depth
 
-    rm -f *.depth
-    find . -size 0 -delete
+    #rm -f *.depth
+    find . -size -100 -type f -name \*.depth 
 
-    for f in $(ls --color=none | grep .depth2); do
-        mv $f $(echo $f |  sed -r 's/.+(N[CT]_[0-9]{6}\.[0-9]+).+/\1\.depth/')
-    done
+    #for f in $(ls --color=none | grep .depth2); do
+    #    mv $f $(echo $f |  sed -r 's/.+(N[CT]_[0-9]{6}\.[0-9]+).+/\1\.depth/')
+    #done
 
     echo "$RUNNAME: Performing piecewise fits"
-
     parallel $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.depth
 
     mkdir log

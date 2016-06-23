@@ -29,7 +29,7 @@ args = parser.parse_args()
 # create directories
 if not exists(args.dataPath):
 	makedirs(args.dataPath)
-if not exists(join(args.dataPath,"Headers")):
+if (not exists(join(args.dataPath,"Headers")) and taxBool):
 	makedirs(join(args.dataPath,"Headers"))
 if not exists(join(args.dataPath,"Fasta")):
 	makedirs(join(args.dataPath,"Fasta"))
@@ -42,9 +42,10 @@ if (isfile(args.searchFile)):
 	inputString = [a for a in inputString if a != ""]
 	inputString=list(set(inputString))
 	files = [ f[0:-6] for f in listdir(join(args.dataPath,"Fasta")) if f.endswith(".fasta") ]
+	#headers = [ f[0:-4] for f in listdir(join(args.dataPath,"Headers")) if f.endswith(".xml") ]
 	inputString = [string for string in inputString if string not in files]
 
-	if (len(inputString)==0): 
+	if (len(inputString)==0):# and len(files)==0): 
 		print("No search strings present, exiting.")
 		exit()
 else:
@@ -66,7 +67,12 @@ errIndex=[];
 print("Querying Entrez in chunks of 3.")
 for i, searchStr in enumerate(inputString2):
 	for j,searchStr2 in enumerate(searchStr):
-		searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2)
+		if (re.match('^(NC|NT)_[0-9]{6}\.[0-9]+',searchStr2)):
+			extra=" AND srcdb_refseq[PROP]"
+		else:
+			extra=""
+		searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra)
+
 		record = Entrez.read(searchHandle)
 		try:
 			idStr.append(record["IdList"][0])
@@ -82,10 +88,12 @@ for i, searchStr in enumerate(inputString2):
 if (matchNr==0):
 	print("Found 0 matches. Exiting.")
 	exit()
-else: 
-	print("Found "+repr(matchNr)+" matche(s). Downloading to "+repr(args.dataPath)+".")
+	#inputString=files
+
+print("Found "+repr(matchNr)+" matche(s). Downloading to "+repr(args.dataPath)+".")
 
 # delete non found items from inputString
+errorString = [i for j, i in enumerate(inputString) if j in errIndex]
 inputString = [i for j, i in enumerate(inputString) if j not in errIndex]
 inputStringChunks=chunks(inputString,args.fetchNr)
 
@@ -162,3 +170,5 @@ if (args.taxBool==True):
 				
 	outHandle.close()
 
+print("\nNon found strings:")
+print('\n'.join(errorStrings))
