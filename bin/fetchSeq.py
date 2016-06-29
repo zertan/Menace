@@ -68,7 +68,7 @@ print("Querying Entrez in chunks of 3.")
 for i, searchStr in enumerate(inputString2):
 	for j,searchStr2 in enumerate(searchStr):
 		if (re.match('^(NC|NT)_[0-9]{6}\.[0-9]+',searchStr2)):
-			extra=" AND srcdb_refseq[PROP]"
+			extra="[ACCN] AND srcdb_refseq[PROP]"
 		else:
 			extra=""
 		searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra)
