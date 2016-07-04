@@ -35,6 +35,7 @@ if not exists(join(args.dataPath,"Fasta")):
 	makedirs(join(args.dataPath,"Fasta"))
 	
 if (isfile(args.searchFile)):
+	print("Using search file: " + args.searchFile)
 	with open(args.searchFile) as f:
 		inputString = f.read().splitlines()
 	
@@ -67,15 +68,20 @@ errIndex=[];
 print("Querying Entrez in chunks of 3.")
 for i, searchStr in enumerate(inputString2):
 	for j,searchStr2 in enumerate(searchStr):
-		if (re.match('^(NC|NT)_[0-9]{6}\.[0-9]+',searchStr2)):
+		if (re.match('^N[CTZ]_([A-Z]{2})*[0-9]{6}\.[0-9]+',searchStr2)):
 			extra="[ACCN] AND srcdb_refseq[PROP]"
 		else:
-			extra=""
-		searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra)
+			extra='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'
+		searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra,retmax=500)
 
 		record = Entrez.read(searchHandle)
 		try:
-			idStr.append(record["IdList"][0])
+			if(extra=='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'):
+				for rec in record["IdList"]:
+					idStr.append(rec)
+			else:
+				idStr.append(record["IdList"][0])
+			
 			matchNr+=int(record["Count"])
 		except IndexError:
 			errIndex.append(i*3+j)
@@ -101,6 +107,15 @@ inputStringChunks=chunks(inputString,args.fetchNr)
 idResults = Entrez.read(Entrez.epost("nuccore", id=",".join(idStr)))
 webenv = idResults["WebEnv"]
 queryKey = idResults["QueryKey"]
+
+if(extra=='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'):
+	fetchHandle = Entrez.efetch(db="nuccore", query_key=queryKey,WebEnv=webenv,rettype="acc",retmode="text")
+	data = fetchHandle.read()
+	fetchHandle.close()
+	outHandle = open("./accessions.txt", "w")
+	outHandle.write(data)
+	outHandle.close()
+	exit()
 
 # get sequences from Entrez in chunks of 40 (default)
 for ind, searchStrings in enumerate(inputStringChunks):

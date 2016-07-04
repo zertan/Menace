@@ -33,7 +33,7 @@ for ending in "${fileEndings[@]}"; do
 done
 
 for fn in "${files[@]}"; do
-	bowtie2 -k 5 -p $CPUCORES -x $REFPATH/Index/$REFNAME -1 "$fn"_1"$fileEnding" -2 "$fn"_2"$fileEnding" -S "$fn".sam
+	bowtie2 -k 50 --score-min L,-0.6,-0.6 -p $CPUCORES -x $REFPATH/Index/$REFNAME -1 "$fn"_1"$fileEnding" -2 "$fn"_2"$fileEnding" -S "$fn".sam
 done
 
 parallel rm -f {}_1"$fileEnding" {}_2"$fileEnding" ::: "${files[@]}"
@@ -61,7 +61,7 @@ for RUNNAME in "${files[@]}"; do
 
 	files=( *.bam )
 	for f in "${files[@]}"; do
-		mv $f $(echo $f | sed -r 's/.+(N[CT]_[0-9]{6}\.[0-9]+).+/\1\.bam/')
+		mv $f $(echo $f | sed -r 's/.+(N[CTZ]_([A-Z]{2})*[0-9]{6}\.[0-9]+).+/\1\.bam/')
 	done
 
     echo "$RUNNAME: Calculating coverage"
