@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+set -u #exit on using uninitialised vars
+set -o pipefail # exit if error somewhere in pipe
+set -e #exit on execution error
+
+# paths
+SCRIPTPATH=$1
+CPUCORES=$3
+REFNAME=$2
+NODEPATH=$4
+
+DATAPATH=$NODEPATH/Data
+REFPATH=$NODEPATH/References
+DESTPATH=$NODEPATH/Analysis
+DORICPATH=$NODEPATH/DoriC
+
+echo "Running alignment stage"
+cd $DATAPATH
+
+# pick up .gz, .bz2 or .fastq files and prune file ending
+declare -a files
+
+shopt -s nullglob
+fileEndings=(".fastq.bz2" ".fastq.gz" ".fastq")
+
+for ending in "${fileEndings[@]}"; do
+    files=( *_1"$ending" )
+    files=( "${files[@]%_1$ending}" )
+    fileEnding="$ending"
+    if [ ! ${#files[@]} -eq 0 ]; then
+        break
+    fi
+done
+
+if ["$fileEnding" -eq ".fastq.bz2"]
+	parallel bzip2 -d {} ::: *.bz2
+fi
+
+if ["$fileEnding" -eq ".fastq.gz"]
+	parallel gzip -d {} ::: *.gz
+fi
+
+
+for fn in "${files[@]}"; do
+	gem-mapper -p -b -I $REFPATH/Index/$REFNAME.gem -T $CPUCORES -q offset-33 --gem-quality-threshold 26 -s 0 -d all -D 1 -1 "$fn"_1.fastq -2 "$fn"_2.fastq -o "$fn"
+	sleep 10
+	gem-2-sam --max-memory 1000000 -l -I $REFPATH/Index/$REFNAME.gem -q offset-33 -i "$fn".map -o "$fn".sam
+	#gemtools convert -I $REFPATH/Index/$REFNAME.gem -i "$fn".map -o "$fn".bam -q 33 -t $CPUCORES --no-index --no-sort -p
+	rm -f "$fn".map
+	#samtools view -@ $CPUCORES "$fn".bam -o "$fn".sam
+	#rm -f "$fn".bam
+done
+
+parallel rm -f {}_1.fastq {}_2.fastq ::: "${files[@]}"
+
+parallel mkdir {} ::: "${files[@]}"
+
+echo "Running pathoscope"
+
+parallel pathoscope ID -alignFile {}.sam -expTag {} -fileType sam ::: "${files[@]}"
+parallel rm -f {}.sam ::: "${files[@]}"
+
+for RUNNAME in "${files[@]}"; do
+	echo "$RUNNAME: Running coverage stage"
+
+    samtools view -@ $CPUCORES -F 4 -bS updated_$RUNNAME.sam -o $RUNNAME.bam
+    rm -f updated_$RUNNAME.sam
+
+    echo "$RUNNAME: Sorting"
+    samtools sort -@ $CPUCORES $RUNNAME.bam $RUNNAME.sorted
+    rm -f $RUNNAME.bam
+done
+
+parallel "samtools view -H {}.sorted.bam > {}.header" :::  "${files[@]}"
+
+parallel "cat {}.header | sed -r 's/\///g' > {}.reheader" :::  "${files[@]}"
+
+parallel "samtools reheader {}.reheader {}.sorted.bam > {}.sorted2.bam" ::: "${files[@]}"
+
+parallel bamtools split -in {}.sorted2.bam -reference ::: "${files[@]}"
+rm -f *.sorted2.bam *.sorted.bam
+rm -f *.header *.reheader
+
+parallel "rsync -avm --remove-source-files --include='{}*' -f 'hide,! */' ./     ./{}" ::: "${files[@]}"
+
+awkfun() {
+awk 'BEGIN { FS = "\t" } ; {print $2,$4}'
+}
+
+for RUNNAME in "${files[@]}"; do
+	cd $RUNNAME
+
+    echo "$RUNNAME: Calculating coverage"
+   	perl -v
+    rc=$?; 
+	if [[ $rc != 0 ]]; then 
+		parallel samtools mpileup -q8 {} '>' {.}.d ::: *.bam
+		parallel "cat {} | awk '{print \$2,\$4}' > {}epth"  ::: *.d
+		rm -f *.d
+	else
+		parallel samtools view -@ $CPUCORES -q8 -o {.}.sam {} ::: *.bam
+		parallel $SCRIPTPATH/bin/interp.pl {} $REFPATH/Headers/{.}.xml '>' {.}.depth ::: *.sam
+		rm -f *.sam
+	fi
+	rm -f *.bam
+
+    #echo "$RUNNAME: Performing prefit work"
+
+    #parallel "cat {} | awk -F $'\t' '{print \$2,\$4}' > {}2"  ::: *.depth
+
+    #rm -f *.depth
+    find . -size -100 -type f -name \*.depth 
+	
+ 	files2=( *.depth2 )
+
+    for f in "${files2[@]}"; do
+        mv "$f" $(echo "$f" |  sed -r 's/.+(N[CT]_[0-9]{6}\.[0-9]+).+/\1\.depth/')
+    done
+	
+	parallel "cat {} | awk '{sum+=\$2} END { print \"{.}\",sum}'" ::: *.depth > coverage.csv
+	
+    echo "$RUNNAME: Performing piecewise fits"
+
+    $SCRIPTPATH/refSel.py ./ $REFPATH/headers/
+
+	parallel $SCRIPTPATH/piecewiseFit.py {}.depth $REFPATH/headers/ $DORICPATH/ :::: referenceACC.txt
+
+    mkdir log
+    mv *.log log
+	
+	mkdir png
+	mv *.png png
+	
+	mkdir npy
+	mv *.npy npy
+
+	mkdir depth
+	mv *.depth depth
+
+	cd $DATAPATH
+done
+
