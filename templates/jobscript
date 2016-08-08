@@ -18,6 +18,7 @@ DATA_PATH={{ data_path }}
 OUTPUT_PATH={{ output_path }}
 DORIC_PATH={{ doric_path }}
 
+MAPPER={{ mapper }}
 REF_NAME={{ ref_name }}
 START_IND={{ start_ind }}
 SAMPLES_PER_NODE={{ samples_per_node }}
@@ -43,7 +44,7 @@ pdcp $REF_PATH/taxIDs.txt $NODE_PATH/References
 
 pdcp $DORIC_PATH/bacteria_record.dat $NODE_PATH/DoriC
 
-$SLURM_SUBMIT_DIR/bin/mainBuild.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_PATH
+$SLURM_SUBMIT_DIR/bin/mainBuild{{ mapper }}.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_PATH
 
 mkdir -p $OUTPUT_PATH
 

@@ -14,6 +14,7 @@ Doric=$SNIC_NOBACKUP/Data/References/DoriC
 Node=$TMPDIR
 
 [Other]
+Mapper=bowtie2
 RefName=bacSmall
 NrSamples=100
 SamplesPerNode=5

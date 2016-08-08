@@ -180,6 +180,7 @@ def compile_config(args,config):
         'output_path': config['Directories']['Output'],
         'doric_path': config['Directories']['DoriC'],
 
+        'mapper': config['Other']['Mapper'],
         'ref_name': config['Other']['RefName'],
         'nr_samples': config['Other']['NrSamples'],
         'samples_per_node': config['Other']['SamplesPerNode'],
@@ -218,6 +219,7 @@ def generate_jobscript(config):
             output_path=config['output_path'],
             doric_path=config['doric_path'],
 
+            mapper=config['mapper'],
             ref_name=config['ref_name'],
             nr_samples=config['nr_samples'],
             samples_per_node=min(int(config['samples_per_node']),int(config['nr_samples'])),
@@ -258,6 +260,21 @@ def generate_bt2_build_command(args,config):
 	#print(referenceList)
 
     cmd = "(cd " + d + " && bowtie2-build --large-index " + "-t " + str(args.b_threads) + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
+    return cmd
+
+def generate_gem_build_command(args,config):
+    """Generate command for building a bowtie2 index."""
+    #for file in os.listdir(os.path.join(config['Directories']['References'],'Fasta')):
+        #if file.endswith(".fasta"):
+        #    print(file)
+    #d=os.path.join(config['ref_path'],'Fasta');
+    #files=[f for f in os.listdir(d)]
+    #referenceList=",".join(files)
+    #os.environ['reflist'] = referenceList
+    #proc = subprocess.Popen("for f in " + d + "/*.fasta" + '; do cat "$f" >> tmpfasta', shell=True)
+    #print(referenceList)
+
+    cmd = "(cd " + d + " && gem-indexer " + "-T " + str(args.b_threads) + " -i " + os.path.join(config['ref_path'],"Fasta","multi.fasta") + " -o " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
     return cmd
 
 def get_data_prefix(config):
@@ -339,8 +356,15 @@ def main():
 		if(  os.listdir(tmp_dir)!=[] and args.subparser_name=='full'):	
 			pass
 		else:
-			process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
-			process.wait()
+			if(config['mapper']=='bowtie2'):
+				process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
+				process.wait()
+			elif(config['mapper']=='gem'):
+				process = subprocess.Popen("extra/concatenateFasta.sh " + os.path.join(config['ref_path'],'Fasta'), shell=True)
+				process.wait()
+
+				process = subprocess.Popen(generate_gem_build_command(args,config), shell=True)
+				process.wait()
 
 	if(args.subparser_name=='full' or args.subparser_name=='make'):
 		generate_jobscript(config)
