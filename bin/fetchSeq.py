@@ -116,13 +116,12 @@ webenv = idResults["WebEnv"]
 queryKey = idResults["QueryKey"]
 
 #if(False):#extra=='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'):
-fetchHandle = Entrez.efetch(db="nuccore", query_key=queryKey,WebEnv=webenv,rettype="acc",retmode="text")
-data = fetchHandle.read()
-fetchHandle.close()
-outHandle = open("./accessions.txt", "w")
-outHandle.write(data)
-outHandle.close()
-exit()
+#fetchHandle = Entrez.efetch(db="nuccore", query_key=queryKey,WebEnv=webenv,rettype="acc",retmode="text")
+#data = fetchHandle.read()
+#fetchHandle.close()
+#outHandle = open("./accessions.txt", "w")
+#outHandle.write(data)
+#outHandle.close()
 
 # get sequences from Entrez in chunks of 100 (default)
 for ind, searchStrings in enumerate(inputStringChunks):
@@ -143,7 +142,7 @@ for ind, searchStrings in enumerate(inputStringChunks):
 
 # get taxonomy info at strain and organism level
 if (args.taxBool==True):
-	idResults = Entrez.read(Entrez.epost("nuccore", id=",".join(inputStringInit)))
+	idResults = Entrez.read(Entrez.epost("nuccore", id=",".join(idStr)))
 	webenv = idResults["WebEnv"]
 	queryKey = idResults["QueryKey"]
 	
@@ -158,9 +157,9 @@ if (args.taxBool==True):
 
 	print("Writing headers to "+str(args.dataPath))
 	for i, searchStr in enumerate(inputStringInit):
-		#outHandle = open(join(args.dataPath,"Headers",searchStr+".xml"), "w")
-		#outHandle.write("<DocSum>"+data[i])
-		#outHandle.close()
+		outHandle = open(join(args.dataPath,"Headers",searchStr+".xml"), "w")
+		outHandle.write("<DocSum>"+data[i])
+		outHandle.close()
 	
 		tmp=re.search('<Item Name="TaxId" Type="Integer">([0-9]+)',data[i])
 		tIdArr.append(tmp.group(1))
@@ -191,14 +190,14 @@ if (args.taxBool==True):
 		orgIdArr.append(tmpId)
 		orgNameArr.append(tmpName)
 	
-	outHandle = open(join(args.dataPath,"taxIDs.txt"), "w")
+	outHandle = open(join(args.dataPath,"taxIDs.txt"), "a")
 
-	print(', '.join(tIdArr))
-	print("\n")
-	print(', '.join(tmpIdArr))
+	#print(', '.join(tIdArr))
+	#print("\n")
+	#print(', '.join(tmpIdArr))
 
 	#outHandle.write("ACC"+"\tOrg"+"\tStr"+"\n")
-	for i, searchStr in enumerate(inputStringInit):	
+	for i, searchStr in enumerate(inputString):	
 		#for j,tid in enumerate(tmpIdArr):
 		#	print(tIdArr[i]+"\n")
 		#	print(tid+"\n")

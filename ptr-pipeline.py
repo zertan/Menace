@@ -158,7 +158,17 @@ def get_current_dir_subdirs(f):
     return ret 
 
 def compile_config(args,config):    
-    start_ind1, data_prefix=get_data_prefix(config)
+    #try:
+    #	start_ind1, data_prefix=get_data_prefix(config)
+    #except e:
+    #	print("The data accession prefix (eg. ERR525) could not be retrieved. Enter manually? (y/n)")
+
+    if(config['Other']['DataPrefix']==""):
+        start_ind1, data_prefix = get_data_prefix(config)
+    else:
+        start_ind1 = 0
+        data_prefix = config['Other']['DataPrefix']
+
     email=args.email if args.email else config['Other']['Email']
     if (config['Other']['StartInd']==""):
         start_ind=start_ind1
