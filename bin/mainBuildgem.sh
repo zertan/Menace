@@ -45,7 +45,7 @@ fi
 for fn in "${files[@]}"; do
 	gem-mapper -p -b -I $REFPATH/Index/$REFNAME.gem -T $CPUCORES -q offset-33 --gem-quality-threshold 26 -s 0 -d all -D 1 -1 "$fn"_1.fastq -2 "$fn"_2.fastq -o "$fn"
 	sleep 3
-	gem-2-sam --max-memory 100 -l -I $REFPATH/Index/$REFNAME.gem -q offset-33 -i "$fn".map -o "$fn".sam
+	gem-2-sam -l -I $REFPATH/Index/$REFNAME.gem -q offset-33 -i "$fn".map -o "$fn".sam
 	#gem-2-sam --max-memory 100 -q offset-33 -i "$fn".map -o "$fn".sam
 	#gemtools convert -I $REFPATH/Index/$REFNAME.gem -i "$fn".map -o "$fn".bam -q 33 -t $CPUCORES --no-index --no-sort -p
 	rm -f "$fn".map
