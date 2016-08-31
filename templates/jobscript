@@ -34,9 +34,13 @@ mkdir $NODE_PATH/References/Index
 mkdir $NODE_PATH/References/Headers
 mkdir $NODE_PATH/DoriC
 
-IND=$[$START_IND+$SLURM_ARRAY_TASK_ID*$SAMPLES_PER_NODE]
+IND=$[$SLURM_ARRAY_TASK_ID*$SAMPLES_PER_NODE]
+NRSAMPLES=$[$(find $DATA_PATH -type f | wc -l)-(2*$IND+2*$SAMPLES_PER_NODE)]
+NRSAMPLES=$(($NRSAMPLES<$SAMPLES_PER_NODE?$NRSAMPLES:$SAMPLES_PER_NODE))
 
-seq $IND $[$IND+$SAMPLES_PER_NODE-1] | parallel cp $DATA_PATH/$DATA_PREFIX{}* $NODE_PATH/Data
+files=($(find $DATA_PATH -type f | sort | head -$[2*$IND+2*$SAMPLES_PER_NODE] | tail -$[2*$NRSAMPLES]))
+
+parallel cp {} $NODE_PATH/Data ::: "${files[@]}"
 
 pdcp -r $REF_PATH/Headers $NODE_PATH/References
 pdcp -r $REF_PATH/Index $NODE_PATH/References
