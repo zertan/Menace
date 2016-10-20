@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+CODE_DIR=$1
+#source $CODE_DIR/bin/loadmodules.sh
+
+NODE_PATH={{ node_path }}
+REF_PATH={{ ref_path }}
+DATA_PATH={{ data_path }}
+OUTPUT_PATH={{ output_path }}
+DORIC_PATH={{ doric_path }}
+
+MAPPER={{ mapper }}
+REF_NAME={{ ref_name }}
+START_IND={{ start_ind }}
+SAMPLES_PER_NODE={{ samples_per_node }}
+CPU_CORES={{ cpu_cores }}
+JOB_RANGE={{ job_range }}
+
+DATA_PREFIX={{ data_prefix }}
+
+#mkdir $NODE_PATH/Data
+#mkdir $NODE_PATH/Analysis
+#mkdir $NODE_PATH/References
+#mkdir $NODE_PATH/References/Index
+#mkdir $NODE_PATH/References/Headers
+#mkdir $NODE_PATH/DoriC
+
+#IND=$[$SLURM_ARRAY_TASK_ID*$SAMPLES_PER_NODE]
+#NRSAMPLES=$[$(find $DATA_PATH -type f | wc -l)-(2*$IND+2*$SAMPLES_PER_NODE)]
+#NRSAMPLES=$(($NRSAMPLES<$SAMPLES_PER_NODE?$NRSAMPLES:$SAMPLES_PER_NODE))
+
+#files=($(find $DATA_PATH -type f)) #| sort | head -$[2*$IND+2*$SAMPLES_PER_NODE] | tail -$[2*$NRSAMPLES]))
+
+#parallel cp {} $NODE_PATH/Data ::: "${files[@]}"
+
+#pdcp -r $REF_PATH/Headers $NODE_PATH/References
+#pdcp -r $REF_PATH/Index $NODE_PATH/References
+#pdcp $REF_PATH/taxIDs.txt $NODE_PATH/References
+
+#pdcp $DORIC_PATH/bacteria_record.dat $NODE_PATH/DoriC
+
+$CODE_DIR/bin/mainBuild{{ mapper }}.sh $CODE_DIR $REF_NAME $CPU_CORES $NODE_PATH
+
+#mkdir -p $OUTPUT_PATH
+
+#rpdcp -r $NODE_PATH/Data $OUTPUT_PATH
+
+
+# End script

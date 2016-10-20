@@ -15,6 +15,7 @@ import subprocess
 import ftplib
 import re
 from math import ceil
+import platform
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -47,7 +48,7 @@ def get_parser():
 
     parser.add_argument('-c', '--config', dest='config_file', type=str,
                         default=DEFAULT_CONFIG,
-						help="Config file for project specific settings (default: './project.conf').")
+                        help="Config file for project specific settings (default: './project.conf').")
 
     subparsers = parser.add_subparsers(dest='subparser_name')
 
@@ -65,7 +66,7 @@ def get_parser():
     parser_m = subparsers.add_parser('make', help='generate an sbatch jobscript')
     #parser_m.add_argument("-e", action='store_true')
 
-    parser_s = subparsers.add_parser('submit', help='submit job to slurm')
+    parser_s = subparsers.add_parser('run', help='submit job to slurm or run locally')
     #parser_s.add_argument("-opt9", action='store_true')
     #parser_s.add_argument("--opt10", action='store_true')
 
@@ -159,9 +160,9 @@ def get_current_dir_subdirs(f):
 
 def compile_config(args,config):    
     #try:
-    #	start_ind1, data_prefix=get_data_prefix(config)
+    #    start_ind1, data_prefix=get_data_prefix(config)
     #except e:
-    #	print("The data accession prefix (eg. ERR525) could not be retrieved. Enter manually? (y/n)")
+    #    print("The data accession prefix (eg. ERR525) could not be retrieved. Enter manually? (y/n)")
 
     if(config['Other']['DataPrefix']==""):
         start_ind1, data_prefix = get_data_prefix(config)
@@ -174,7 +175,7 @@ def compile_config(args,config):
         start_ind=start_ind1
     else:
         start_ind=config['Other']['StartInd']
-	
+    
     job_range = ceil(float(config['Other']['NrSamples'])/float(config['Other']['SamplesPerNode']))-1
     conf={
         'project': config['Project']['ProjectID'],
@@ -197,7 +198,7 @@ def compile_config(args,config):
         'email': email,
         'data_prefix': data_prefix,
         'start_ind': start_ind,
-		'job_range': job_range,
+        'job_range': job_range,
 
         'ftp_url': config['Other']['FtpURL'],
         'data_url': config['Other']['DataURL']
@@ -211,10 +212,13 @@ def compile_config(args,config):
         # 'feSeq_threads': feSeq_threads
 
 def generate_jobscript(config):
-    env = Environment(loader=FileSystemLoader("templates"))
-    template = env.get_template("jobscript")
+    env = Environment(loader=FileSystemLoader(os.path.join(CODE_DIR,'templates')))
+    if (config['cluster']==''):
+        template = env.get_template('jobscript_local')
+    else:
+        template = env.get_template('jobscript')
 
-    with open("jobscript", "w") as f:
+    with open(os.path.join(CODE_DIR,'jobscript'), 'w') as f:
         output = template.render(
             project=config['project'],
             cluster=config['cluster'],
@@ -236,9 +240,10 @@ def generate_jobscript(config):
             email=config['email'],
             data_prefix=config['data_prefix'],
             start_ind=config['start_ind'],
-			job_range=config['job_range']
+            job_range=config['job_range']
         )
         f.write(output)
+        os.chmod(os.path.join(CODE_DIR,'jobscript'),0o777)
 
 
 # def generate_pipeline_script(project, config, env):
@@ -267,24 +272,26 @@ def generate_bt2_build_command(args,config):
     referenceList=",".join(files)
     #os.environ['reflist'] = referenceList
     #proc = subprocess.Popen("for f in " + d + "/*.fasta" + '; do cat "$f" >> tmpfasta', shell=True)
-	#print(referenceList)
+    #print(referenceList)
 
-    cmd = "(cd " + d + " && bowtie2-build --large-index " + "-t " + str(args.b_threads) + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
+    cmd = "(cd " + d + " && bowtie2-build --large-index " + "--threads " + str(args.b_threads) + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
     return cmd
 
 def generate_gem_build_command(args,config):
-    """Generate command for building a bowtie2 index."""
+    """Generate command for building a gem index."""
     #for file in os.listdir(os.path.join(config['Directories']['References'],'Fasta')):
         #if file.endswith(".fasta"):
         #    print(file)
-    #d=os.path.join(config['ref_path'],'Fasta');
+    d=os.path.join(config['ref_path'],'Fasta');
     #files=[f for f in os.listdir(d)]
     #referenceList=",".join(files)
     #os.environ['reflist'] = referenceList
     #proc = subprocess.Popen("for f in " + d + "/*.fasta" + '; do cat "$f" >> tmpfasta', shell=True)
     #print(referenceList)
-
-    cmd = "(cd " + d + " && gem-indexer " + "-T " + str(args.b_threads) + " -i " + os.path.join(config['ref_path'],"Fasta","multi.fasta") + " -o " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
+    if (platform.system()=='Linux'):
+        cmd = "(cd " + d + " && gem-indexer " + "-T " + str(args.b_threads) + " -i " + os.path.join(d,"multi.fasta") + " -o " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
+    elif (platform.system()=='Darwin'): # for Mac OS X assume older (2010) binaries
+        cmd = "(cd " + d + " && gem-do-index " + " -i " + os.path.join(config['ref_path'],"Fasta","multi.fasta") + " -o " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
     return cmd
 
 def get_data_prefix(config):
@@ -298,23 +305,24 @@ def get_data_prefix(config):
     return (startind,data_prefix)
 
 def generate_fetch_seq_command(args,config):
-	nr_digits=len(config['start_ind'])
-	end_ind=int(config['start_ind'])+int(config['nr_samples'])-1
-	url=os.path.join(config['data_url'],config['data_prefix'])
-	url=config['ftp_url']+url
+    nr_digits=len(config['start_ind'])
+    end_ind=int(config['start_ind'])+int(config['nr_samples'])-1
+    url=os.path.join(config['data_url'],config['data_prefix'])
+    url=config['ftp_url']+url
     
-	if(not re.match("ftp://",url)):
-		url="ftp://"+url
+    if(not re.match("ftp://",url)):
+        url="ftp://"+url
 
-	cmd=" | parallel -j " + str(args.feSeq_threads) + " wget -c -r -nH -np -nd -R index.html* -P " + config['data_path'] + " " + url + "{}/"
-	#cmd="$(echo {"+ str(config['start_ind']) + ".." + str(end_ind) + "})"+cmd
-	cmd='seq -f %0' + str(nr_digits) + 'g ' + str(config['start_ind']) + " " + str(end_ind) + cmd
-	#print(cmd)
-	return cmd
+    cmd=" | parallel -j " + str(args.feSeq_threads) + " wget -c -r -nH -np -nd -R index.html* -P " + config['data_path'] + " " + url + "{}/"
+    #cmd="$(echo {"+ str(config['start_ind']) + ".." + str(end_ind) + "})"+cmd
+    cmd='seq -f %0' + str(nr_digits) + 'g ' + str(config['start_ind']) + " " + str(end_ind) + cmd
+    #print(cmd)
+    return cmd
 
 def generate_fetch_ref_command(args,config):
     """Generate command for downloading reference fastas and headers."""
-    cmd = "bin/fetchSeq.py -e {email} -t True -d {ref_path} -s " + args.fe_srch_file
+    #dir_path = os.path.dirname(os.path.realpath(__file__))
+    cmd = CODE_DIR+"/bin/fetchSeq.py -e {email} -t True -d {ref_path} -s " + args.fe_srch_file
     return cmd.format(**config)
 
 def generate_sbatch_command(config):
@@ -322,10 +330,15 @@ def generate_sbatch_command(config):
     cmd = "sbatch --array=0-{0} jobscript"
     return cmd.format(config['job_range'])
 
+def generate_local_command(config):
+    """Generate command for performing a local run."""
+    cmd = os.path.join(CODE_DIR,'jobscript '+ CODE_DIR)
+    return cmd
+
 def generate_collect_command(config):
-	koremLoc=os.path.join(CODE_DIR,"extra/accLoc.csv") 
-	cmd="bin/PTRMatrix.py {output_path} {ref_path} {doric_path} " + koremLoc
-	return cmd.format(**config)
+    koremLoc=os.path.join(CODE_DIR,'extra/accLoc.csv') 
+    cmd=CODE_DIR+"/bin/PTRMatrix.py {output_path} {ref_path} {doric_path} " + koremLoc
+    return cmd.format(**config)
 
 # def print_instructions(config):
 #     """Print instructions for executing pipeline."""
@@ -341,51 +354,51 @@ def generate_collect_command(config):
 #           "exit the virtual environment.")
 #     print("")
 
-def main():
-	args = parse_args(sys.argv[1:])
-	config = read_config(args)
-	config = compile_config(args,config)
+def main(args,config):
+    if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
+        process = subprocess.Popen(generate_fetch_seq_command(args,config), shell=True)
+        process.wait()
 
-	if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
-		process = subprocess.Popen(generate_fetch_seq_command(args,config), shell=True)
-		process.wait()
+    if(args.subparser_name=='full' or args.subparser_name=='fetch-references'):
+        process = subprocess.Popen(generate_fetch_ref_command(args,config), shell=True)
+        process.wait()
 
-	if(args.subparser_name=='full' or args.subparser_name=='fetch-references'):
-		process = subprocess.Popen(generate_fetch_ref_command(args,config), shell=True)
-		process.wait()
+    if(args.subparser_name=='full' or args.subparser_name=='build-index'):
+        process = subprocess.Popen(CODE_DIR+"/bin/changeTID.sh " + config['ref_path'], shell=True)
+        process.wait()
+        
+        tmp_dir=os.path.join(config['ref_path'],"Index")
+        
+        if (not os.path.isdir(tmp_dir)):
+            os.makedirs(tmp_dir)
+        
+        if(  os.listdir(tmp_dir)!=[] and args.subparser_name=='full'):
+            pass
+        else:
+            if(config['mapper']=='bowtie2'):
+                process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
+                process.wait()
+            elif(config['mapper']=='gem'):
+                process = subprocess.Popen(CODE_DIR+"/extra/concatenateFasta.sh " + os.path.join(config['ref_path'],'Fasta'), shell=True)
+                process.wait()
 
-	if(args.subparser_name=='full' or args.subparser_name=='build-index'):
-		process = subprocess.Popen("bin/changeTID.sh " + config['ref_path'], shell=True)
-		process.wait()
-		
-		tmp_dir=os.path.join(config['ref_path'],"Index")
-		
-		if (not os.path.isdir(tmp_dir)):
-			os.makedirs(tmp_dir)
-		
-		if(  os.listdir(tmp_dir)!=[] and args.subparser_name=='full'):	
-			pass
-		else:
-			if(config['mapper']=='bowtie2'):
-				process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
-				process.wait()
-			elif(config['mapper']=='gem'):
-				process = subprocess.Popen("extra/concatenateFasta.sh " + os.path.join(config['ref_path'],'Fasta'), shell=True)
-				process.wait()
+                process = subprocess.Popen(generate_gem_build_command(args,config), shell=True)
+                process.wait()
 
-				process = subprocess.Popen(generate_gem_build_command(args,config), shell=True)
-				process.wait()
+    if((args.subparser_name=='full' and not config.cluster=='') or args.subparser_name=='make'):
+        generate_jobscript(config)
 
-	if(args.subparser_name=='full' or args.subparser_name=='make'):
-		generate_jobscript(config)
+    if(args.subparser_name=='full' or args.subparser_name=='run'):
+        if (config['cluster']==''):
+            process = subprocess.Popen(generate_local_command(config), shell=True)
+            process.wait()
+        else:
+            process = subprocess.Popen(generate_sbatch_command(config), shell=True)
+            process.wait()
 
-	if(args.subparser_name=='full' or args.subparser_name=='submit'):
-		process = subprocess.Popen(generate_sbatch_command(config), shell=True)
-		process.wait()
-
-	if(args.subparser_name=='collect'):
-		process = subprocess.Popen(generate_collect_command(config), shell=True)
-		process.wait()
+    if(args.subparser_name=='collect'):
+        process = subprocess.Popen(generate_collect_command(config), shell=True)
+        process.wait()
     # prov = provider.get_provider(args['provider_name'], args['project_dir'])
     # p = project.Project(args, prov)
     # p.verify_directory_structure()
@@ -396,4 +409,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args(sys.argv[1:])
+    
+    config = read_config(args)
+    config = compile_config(args,config)
+
+    main(args,config)
