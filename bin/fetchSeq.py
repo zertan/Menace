@@ -48,7 +48,7 @@ if (isfile(args.searchFile)):
 	
 	if (len(inputString)==0):# and len(files)==0): 
 		print("No search strings present, exiting.")
-		#exit()
+		exit()
 else:
 	print("No search strings present, exiting.")
 	exit()
