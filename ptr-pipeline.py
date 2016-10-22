@@ -284,7 +284,11 @@ def generate_gem_build_command(args,config):
     #proc = subprocess.Popen("for f in " + d + "/*.fasta" + '; do cat "$f" >> tmpfasta', shell=True)
     #print(referenceList)
 
+<<<<<<< 5ab44e694d8224eea9f3c96cbfdfd533fecd4a15
     cmd = "(cd " + d + " && gem-indexer " + "-T " + str(args.b_threads) + " -i " + os.path.join(config['ref_path'],"Fasta","multi.fasta") + " -o " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
+=======
+    cmd = "bowtie2-build --large-index " + "-t " + str(args.b_threads) + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name'])
+>>>>>>> Update readme, options ptr-pipeline
     return cmd
 
 def get_data_prefix(config):
