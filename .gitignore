@@ -5,3 +5,4 @@ jobscript
 collect
 venv
 venv2
+.DS_Store
