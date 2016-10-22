@@ -414,4 +414,3 @@ if __name__ == "__main__":
     config = read_config(args)
     config = compile_config(args,config)
 
-    main(args,config)
