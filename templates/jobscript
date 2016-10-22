@@ -33,10 +33,11 @@ mkdir $NODE_PATH/References
 mkdir $NODE_PATH/References/Index
 mkdir $NODE_PATH/References/Headers
 mkdir $NODE_PATH/DoriC
+mkdir -p $OUTPUT_PATH
 
-IND=$[$SLURM_ARRAY_TASK_ID*$SAMPLES_PER_NODE]
+IND=$[$START_IND+$SLURM_ARRAY_TASK_ID*$SAMPLES_PER_NODE]
 NRSAMPLES=$[$(find $DATA_PATH -type f | wc -l)-(2*$IND+2*$SAMPLES_PER_NODE)]
-NRSAMPLES=$(($NRSAMPLES<$SAMPLES_PER_NODE?$NRSAMPLES:$SAMPLES_PER_NODE))
+NRSAMPLES=$(($NRSAMPLES<0?$[(2*$SAMPLES_PER_NODE+$NRSAMPLES)/2]:$SAMPLES_PER_NODE))
 
 files=($(find $DATA_PATH -type f | sort | head -$[2*$IND+2*$SAMPLES_PER_NODE] | tail -$[2*$NRSAMPLES]))
 
@@ -48,9 +49,7 @@ pdcp $REF_PATH/taxIDs.txt $NODE_PATH/References
 
 pdcp $DORIC_PATH/bacteria_record.dat $NODE_PATH/DoriC
 
-$SLURM_SUBMIT_DIR/bin/mainBuild{{ mapper }}.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_PATH
-
-mkdir -p $OUTPUT_PATH
+$SLURM_SUBMIT_DIR/bin/mainBuild{{ mapper }}.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_PATH $OUTPUT_PATH
 
 rpdcp -r $NODE_PATH/Data $OUTPUT_PATH
 

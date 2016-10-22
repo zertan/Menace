@@ -38,6 +38,19 @@ def chunks2(x, b, s):
 		#out[i]=np.sum(x2)
 #	return out
 
+def chunks3(x, b, s):
+	l=len(x)
+	#b2=int(np.floor(float(b)/float(2)))
+	#out=np.zeros(int(np.floor(float(l)/float(s))))
+	for i in range(0, int(np.floor(float(l)/float(s)))):
+		if (i*s+b>l):
+			r=i*s+b-l
+			x2=x[i*s:i*s+b-r]
+			x2.extend(x[0:r])
+		else:
+			x2=x[i*s:i*s+b]
+		yield x2
+
 def binData(x,binSize):
 	l=np.ceil((len(x)/binSize))
 	out=np.zeros(l+1)
@@ -177,16 +190,20 @@ def rejectOutliers(data, m = 2.):
     s = d/mdev if mdev else 0.
     return data[s<m]
 
+acc=os.path.splitext(sys.argv[1])[0]
+fileEnding=os.path.splitext(sys.argv[1])[1]
+
 try:
-	#data=np.loadtxt(sys.argv[1],delimiter=" ")
-	data=pandas.read_csv(sys.argv[1],delimiter=" ")
+	if fileEnding==".depth":
+		data=pandas.read_csv(sys.argv[1],delimiter=" ")
+		data=np.array(data).astype('int32')
+	elif fileEnding==".npy":
+		data=np.load(sys.argv[1])
 except IOError as e:
-	print("I/O error({0}): {1}".format(e.errno, e.strerror))
+	print("I/O error "+sys.argv[1])
 	sys.exit()
 
-data=np.array(data).astype('int32')
-
-with open(os.path.join(sys.argv[2],sys.argv[1][:-6]+".xml")) as fd:
+with open(os.path.join(sys.argv[2],acc+".xml")) as fd:
     obj = xmltodict.parse(fd.read())
 
 genomeLen=int(obj['DocSum']['Item'][8]['#text'])
@@ -198,14 +215,22 @@ try:
 except:
 	pass
 
-if(data.shape[1]==1):
+try:
+	if(data.shape[1]==1):
+		x = np.arange(1,genomeLen)-1
+		yr = data[:, 0].astype(float)
+	elif(data.shape[1]==2):
+		x = data[:, 0]-1
+		y = data[:, 1].astype(float)
+		yr = np.zeros(genomeLen)
+		yr[x] = y
+except:
+	genomeLen=data.shape[0]
 	x = np.arange(1,genomeLen)-1
-	yr = data[:, 0].astype(float)
-elif(data.shape[1]==2):
-	x = data[:, 0]-1
-	y = data[:, 1].astype(float)
-	yr = np.zeros(genomeLen)
-	yr[x] = y
+	#yr = yr = np.zeros(genomeLen)
+	yr = data
+
+print(sys.argv[1])
 
 #try:
 #	print(oriData[repr(sys.argv[1][:-6]])
@@ -283,7 +308,7 @@ if (float(tmp)/float(np.ceil(len(yr)/binLen))<0.6):
 #print(str(med))
 #yr=[value for value in yr if (value<10*med)]
 
-y1=yr
+y1=yr/coveragePercentage
 #med=np.median(y)
 #y1=[value for value in yr if (value > (1/4)*med) & (value<4*med)]
 
@@ -524,12 +549,12 @@ result.plot()
 
 #plt.plot(x1, np.log2(y1),         'bo')
 try:
-	oriLoc=oriData.loc[sys.argv[1][:-6],'oriC location']
+	oriLoc=oriData.loc[acc,'oriC location']
 	oriLoc=oriLoc.split('..',1)
 	oriLoc=int(oriLoc[0])
 	med=np.median(result.best_fit)
 	plt.plot(oriLoc, med,         'g*')
-	print(oriData.loc[sys.argv[1][:-6],'Organism'])
+	print(oriData.loc[acc,'Organism'])
 except:
 	pass
 #plt.plot(x1, result.init_fit, 'k--')

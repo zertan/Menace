@@ -57,8 +57,9 @@ my %close = (); ##Hash of closing positions, when the current_position gets to t
     ##contained value from those open and deletes the indexed position from the hash
 
 while (my $line = <HEADER>) {
-	if ($line =~ /<Item Name="Length" Type="Integer">/) {
-		$current_size = $line =~ /.*<Item Name="Length" Type="Integer">([0-9]+).*/;
+	if ($line =~ /<Item Name="Length" Type="Integer">([0-9]+)<\/Item>.*/) {
+		#$line =~ /.*<Item Name="Length" Type="Integer">([0-9]+)<\/Item>.*/;
+		$current_size=$1;
 		last;
 	}
 }
@@ -67,17 +68,17 @@ close(HEADER);
 while (my $line = <SAM>) {
     my @tokens = split /\t/, $line;
 
-    if ($current_location ne $tokens[2]) { ##Start a new sequence region
-        for (my $i = $current_position; $i <= $current_size; $i++) { ##Close the previous sequence region
-            if (defined($close{$i})) {
-                $open = $open - $close{$i};
-                delete $close{$i};
-            }
-            print $open . "\n";
-        }
-        if ($current_location ne "") {
-            print "\n";
-        }
+    if ($current_location ne $tokens[2] && $current_location ne "") { ##Start a new sequence region
+        #for (my $i = $current_position; $i <= $current_size; $i++) { ##Close the previous sequence region
+        #    if (defined($close{$i})) {
+        #        $open = $open - $close{$i};
+        #        delete $close{$i};
+        #    }
+        #    print $open . "\n";
+        #}
+        #if ($current_location ne "") {
+        #    print "\n";
+        #}
 
         ##Initiate a new sequence region
         my @location_tokens = split /\|/, $tokens[2];
@@ -90,7 +91,7 @@ while (my $line = <SAM>) {
 
         ##Print pileup to just before the first read (will be 0)
         for (my $current_position = 1; $current_position < $tokens[3]; $current_position++) {
-            print $open . "\n";
+            print $current_position . "\t" . $open . "\n";
 			#print $open . "\n";
         }
         $current_position = $tokens[3];
@@ -184,6 +185,9 @@ while (my $line = <SAM>) {
 
 #print $current_position
 #$current_size = 5277274;
+#print "cp: " . $current_position;
+#print "size: " . $current_size;
+
 for (my $i = $current_position; $i <= $current_size; $i++) {  ##Finish up the last sequence region
     if (defined($close{$i})) {
         $open = $open - $close{$i};
@@ -192,7 +196,7 @@ for (my $i = $current_position; $i <= $current_size; $i++) {  ##Finish up the la
     print $open . "\n";
 	#print $open . "\n";
 }
-print "\n";
+#print "\n";
 close(SAM);
 
 #foreach my $position (keys %close)
