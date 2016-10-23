@@ -4,7 +4,7 @@ set -o pipefail # exit if error somewhere in pipe
 set -e #exit on execution error
 
 function mvAll {
-	mv $1 $(echo $1 | sed -r 's/.+(N[CTZ]_([A-Z]{2})*[0-9]{6}\.[0-9]+).+/\1\.bam/')
+	mv $1 $(echo $1 | sed -E 's/.+(N[CTZ]_([A-Z]{2})*[0-9]{6}\.[0-9]+).+/\1\.bam/')
 }
 export -f mvAll
 
@@ -44,7 +44,7 @@ samtools view -@ $CPUCORES -bS updated_$FILE.sam -o $FILE.bam
 rm -f updated_$FILE.sam
 
 echo "$FILE: Sorting"
-samtools sort -@ $CPUCORES $FILE.bam $FILE.sorted
+samtools sort -@ $CPUCORES $FILE.bam -o $FILE.sorted.bam
 rm -f $FILE.bam
 
 bamtools split -refPrefix $FILE -in $FILE.sorted.bam -reference
@@ -82,7 +82,7 @@ done
 cd depth
 
 echo "$FILE: Performing secondary fits"
-cat $REFPATH/taxIDs2.txt | awk 'BEGIN {FS=" "} {print $2}' | sort -u | parallel "\$SCRIPTPATH/bin/test.py \$REFPATH {} \$(grep -r \" {}\$\" \$REFPATH/taxIDs2.txt |  awk 'BEGIN {FS=\" \"} {print \$1}' | tr '\n' ' ')"
+cat $REFPATH/taxIDs.txt | awk 'BEGIN {FS=" "} {print $2}' | sort -u | parallel "\$SCRIPTPATH/bin/test.py \$REFPATH {} \$(grep -r \" {}\$\" \$REFPATH/taxIDs2.txt |  awk 'BEGIN {FS=\" \"} {print \$1}' | tr '\n' ' ')"
 
 parallel "\$SCRIPTPATH/bin/piecewiseFit.py {} \$REFPATH/Headers/ \$DORICPATH/" ::: *.npy
 

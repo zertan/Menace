@@ -38,7 +38,7 @@ DATA_PREFIX={{ data_prefix }}
 
 #pdcp $DORIC_PATH/bacteria_record.dat $NODE_PATH/DoriC
 
-$CODE_DIR/bin/mainBuild{{ mapper }}.sh $CODE_DIR $REF_NAME $CPU_CORES $NODE_PATH
+$CODE_DIR/bin/mainBuild{{ mapper }}.sh $CODE_DIR $REF_NAME $CPU_CORES $NODE_PATH $OUTPUT_PATH
 
 #mkdir -p $OUTPUT_PATH
 

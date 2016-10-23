@@ -157,6 +157,7 @@ if (args.taxBool==True):
 
 	print("Writing headers to "+str(args.dataPath))
 	for i, searchStr in enumerate(inputStringInit):
+		data[i]=re.sub('</eSummaryResult>', '', data[i])
 		outHandle = open(join(args.dataPath,"Headers",searchStr+".xml"), "w")
 		outHandle.write("<DocSum>"+data[i])
 		outHandle.close()
