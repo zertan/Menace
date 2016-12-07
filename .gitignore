@@ -1,8 +1,8 @@
 nohup.out
+*.pyc
 *.stderr
 *.stdout
-jobscript
 collect
 venv
-venv2
+jobscript
 .DS_Store

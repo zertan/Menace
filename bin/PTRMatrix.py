@@ -56,15 +56,15 @@ if(len(sys.argv) <= 1):
 	print("Usage: ./PTRMatrix.py DATA_PATH REF_PATH DORIC_PATH LOC_FILE")
 	sys.exit(1)
 
-if(len(sys.argv) == 3):
-	try:
-		oriData=pd.DataFrame.from_csv(join(sys.argv[3],"bacteria_record.dat"),  sep='	',index_col=1)
-	except:
-		koremOriData=pd.DataFrame.from_csv(sys.argv[3],  sep=';',index_col=0)
-
 if(len(sys.argv) == 4):
-	oriData=pd.DataFrame.from_csv(join(sys.argv[3],"bacteria_record.dat"),  sep='   ',index_col=1)
-	koremOriData=pd.DataFrame.from_csv(sys.argv[4],  sep=';',index_col=0)
+	try:
+		oriData=pd.DataFrame.from_csv(join(sys.argv[4],"bacteria_record.dat"),  sep='	',index_col=1)
+	except:
+		koremOriData=pd.DataFrame.from_csv(sys.argv[4],  sep=';',index_col=0)
+
+if(len(sys.argv) == 5):
+	oriData=pd.DataFrame.from_csv(join(sys.argv[4],"bacteria_record.dat"),  sep='   ',index_col=1)
+	koremOriData=pd.DataFrame.from_csv(sys.argv[5],  sep=';',index_col=0)
 
 #print(koremOriData.loc['NC_016845.1','OriC'])
 
@@ -191,12 +191,12 @@ tLoc=np.zeros(ntTable.shape[0])
 
 for i in range(0,noTable.shape[0]-1):
 	idx=np.invert(np.isnan(noTable[i]))
-	if (np.sum(idx)>2):
+	if (np.sum(idx)>=sys.argv[3]):
 		oLoc[i]=circularMedian(noTable[i][idx],lenVec[i])
 		headerTable.ix[i,'OriC']=oLoc[i]
 
 	idx=np.invert(np.isnan(ntTable[i]))
-	if (np.sum(idx)>2):
+	if (np.sum(idx)>=sys.argv[3]):
 		tLoc[i]=circularMedian(ntTable[i][idx],lenVec[i])
 		headerTable.ix[i,'TerC']=tLoc[i]
 

@@ -33,7 +33,7 @@ if (not exists(join(args.dataPath,"Headers")) and args.taxBool):
 	makedirs(join(args.dataPath,"Headers"))
 if not exists(join(args.dataPath,"Fasta")):
 	makedirs(join(args.dataPath,"Fasta"))
-	
+
 if (isfile(args.searchFile)):
 	print("Using search file: " + args.searchFile)
 	with open(args.searchFile) as f:
@@ -45,8 +45,8 @@ if (isfile(args.searchFile)):
 	files = [ f[0:-6] for f in listdir(join(args.dataPath,"Fasta")) if f.endswith(".fasta") ]
 	#headers = [ f[0:-4] for f in listdir(join(args.dataPath,"Headers")) if f.endswith(".xml") ]
 	inputString = [string for string in inputString if string not in files]
-	
-	if (len(inputString)==0):# and len(files)==0): 
+
+	if (len(inputString)==0):# and len(files)==0):
 		print("No search strings present, exiting.")
 		exit()
 else:
@@ -72,8 +72,9 @@ for i, searchStr in enumerate(inputString2):
 			extra="[ACCN] AND srcdb_refseq_known[PROP]"
 		else:
 			extra='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'
-		searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra,retmax=1000)
+			org_string=True
 
+		searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra,retmax=1000)
 		record = Entrez.read(searchHandle)
 		try:
 			if(extra=='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'):
@@ -81,7 +82,7 @@ for i, searchStr in enumerate(inputString2):
 					idStr.append(rec)
 			else:
 				idStr.append(record["IdList"][0])
-			
+
 			matchNr+=int(record["Count"])
 		except IndexError:
 			errIndex.append(i*3+j)
@@ -102,23 +103,29 @@ print("Found "+repr(matchNr)+" matche(s). Downloading to "+repr(args.dataPath)+"
 errorString = [i for j, i in enumerate(inputString) if j in errIndex]
 inputString = [i for j, i in enumerate(inputString) if j not in errIndex]
 
-print("\nNon found strings:")
-print('\n'.join(errorString))
+if errorString:
+	print("\nNon found strings:")
+	print('\n'.join(errorString))
+
+# update inputString to matched accessions if searched using organism name
+if extra=='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]':
+	fetchHandle = Entrez.efetch(db="nuccore", id=",".join(idStr),rettype="acc",retmode="text")
+	inputString = fetchHandle.read()
+	fetchHandle.close()
+	inputString=inputString.splitlines()
 
 #	else:
 #		idStr=inputString
 
 inputStringChunks=chunks(inputString,args.fetchNr)
 
+#print(len(inputStringChunks))
+
 # post matched IDs to Entrez
 idResults = Entrez.read(Entrez.epost("nuccore", id=",".join(idStr)))
 webenv = idResults["WebEnv"]
 queryKey = idResults["QueryKey"]
 
-#if(False):#extra=='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'):
-#fetchHandle = Entrez.efetch(db="nuccore", query_key=queryKey,WebEnv=webenv,rettype="acc",retmode="text")
-#data = fetchHandle.read()
-#fetchHandle.close()
 #outHandle = open("./accessions.txt", "w")
 #outHandle.write(data)
 #outHandle.close()
@@ -137,31 +144,36 @@ for ind, searchStrings in enumerate(inputStringChunks):
 	print(len(data))
 	for i, searchStr in enumerate(searchStrings):
 		outHandle = open(join(args.dataPath,"Fasta",searchStr+".fasta"), "w")
-		outHandle.write(">"+data[i])
+
+		# limit fasta headers to first part of accession number for downstream tools
+		nl_ind = data[i].find('\n')+1
+		tmp_header = searchStr.split(".")[0]+'\n'
+
+		outHandle.write(">"+tmp_header+data[i][nl_ind:])
 		outHandle.close()
 
 # get taxonomy info at strain and organism level
-if (args.taxBool==True):
-	idResults = Entrez.read(Entrez.epost("nuccore", id=",".join(idStr)))
-	webenv = idResults["WebEnv"]
-	queryKey = idResults["QueryKey"]
-	
+if (args.taxBool):
+	#idResults = Entrez.read(Entrez.epost("nuccore", id=",".join(idStr)))
+	#webenv = idResults["WebEnv"]
+	#queryKey = idResults["QueryKey"]
+
 	fetchHandle = Entrez.efetch(db="nuccore", query_key=queryKey,WebEnv=webenv,rettype="docsum",retmode="xml")
 	data = fetchHandle.read()
 	fetchHandle.close()
-	
+
 	tIdArr=[]
-	
+
 	data=data.split('<DocSum>')
 	data=data[1:]
 
 	print("Writing headers to "+str(args.dataPath))
-	for i, searchStr in enumerate(inputStringInit):
+	for i, searchStr in enumerate(inputString):
 		data[i]=re.sub('</eSummaryResult>', '', data[i])
 		outHandle = open(join(args.dataPath,"Headers",searchStr+".xml"), "w")
 		outHandle.write("<DocSum>"+data[i])
 		outHandle.close()
-	
+
 		tmp=re.search('<Item Name="TaxId" Type="Integer">([0-9]+)',data[i])
 		tIdArr.append(tmp.group(1))
 
@@ -169,7 +181,7 @@ if (args.taxBool==True):
 	fetchHandle = Entrez.efetch(db='taxonomy',id=','.join(tIdArr),retmode='xml')
 	records = Entrez.read(fetchHandle)
 	fetchHandle.close()
-	
+
 	orgIdArr=[]
 	orgNameArr=[]
 	tmpIdArr=[]
@@ -178,7 +190,7 @@ if (args.taxBool==True):
 		#print(record['ParentTaxId'])
 		lineage = record['LineageEx'] # get the entire lineage of the first record
 		#assert len(records) == 1 # die if we get more than one record, unlikely?
-	
+
 		tmpId=record['TaxId']#lineage[-1]['TaxId']
 		tmpName=record['ScientificName']
 		tmpIdArr.append(tmpId)
@@ -187,10 +199,10 @@ if (args.taxBool==True):
 				#print(entry) # prints: {u'ScientificName': 'Viridiplantae', u'TaxId': '33090', u'Rank': 'kingdom '}
 				tmpId=entry['TaxId']
 				tmpName=entry['ScientificName']
-			
+
 		orgIdArr.append(tmpId)
 		orgNameArr.append(tmpName)
-	
+
 	outHandle = open(join(args.dataPath,"taxIDs.txt"), "a")
 
 	#print(', '.join(tIdArr))
@@ -198,13 +210,13 @@ if (args.taxBool==True):
 	#print(', '.join(tmpIdArr))
 
 	#outHandle.write("ACC"+"\tOrg"+"\tStr"+"\n")
-	for i, searchStr in enumerate(inputString):	
+	for i, searchStr in enumerate(inputString):
 		#for j,tid in enumerate(tmpIdArr):
 		#	print(tIdArr[i]+"\n")
 		#	print(tid+"\n")
 		#	if(tIdArr[i]==tid):
-		
-		outHandle.write(searchStr+"\t"+orgIdArr[i]+"\t"+orgNameArr[i]+"\n")	
+
+		outHandle.write(searchStr+"\t"+orgIdArr[i]+"\t"+orgNameArr[i]+"\n")
 		#		break
-				
+
 	outHandle.close()

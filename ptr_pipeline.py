@@ -80,6 +80,7 @@ def get_parser():
 
     parser_c = subparsers.add_parser('collect', help='collect output cluster data')
     parser_c.add_argument("-o", dest='c_out_path', help='Path to store output.',default="./")
+    parser_c.add_argument("--minOrics", dest='min_orics', help='The minimum number of fitted origins needed to make an end estimate of a reference origin.',default=3)
     #parser_c.add_argument("--opt8", action='store_true')
 
     return parser
@@ -336,8 +337,8 @@ def generate_local_command(config):
     return cmd
 
 def generate_collect_command(config):
-    koremLoc=os.path.join(CODE_DIR,'extra/accLoc.csv') 
-    cmd=CODE_DIR+"/bin/PTRMatrix.py {output_path} {ref_path} {doric_path} " + koremLoc
+    koremLoc=os.path.join(CODE_DIR,'extra/accLoc.csv')
+    cmd=CODE_DIR+"/bin/PTRMatrix.py {output_path} {ref_path} " + parser_c.min_orics + " {doric_path} " + koremLoc 
     return cmd.format(**config)
 
 # def print_instructions(config):
@@ -413,4 +414,4 @@ if __name__ == "__main__":
     
     config = read_config(args)
     config = compile_config(args,config)
-
+	main(args,config)

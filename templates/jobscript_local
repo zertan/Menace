@@ -40,9 +40,11 @@ DATA_PREFIX={{ data_prefix }}
 
 $CODE_DIR/bin/mainBuild{{ mapper }}.sh $CODE_DIR $REF_NAME $CPU_CORES $NODE_PATH $OUTPUT_PATH
 
+cd $NODE_PATH
+
 #mkdir -p $OUTPUT_PATH
 
-#rpdcp -r $NODE_PATH/Data $OUTPUT_PATH
+parallel mv {} $OUTPUT_PATH ::: $NODE_PATH/Data/*
 
 
 # End script

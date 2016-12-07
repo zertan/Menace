@@ -8,6 +8,11 @@ function mvAll {
 }
 export -f mvAll
 
+function secondaryFitHelper {
+	$1/bin/addStrainCoverage.py $1 $2 $(grep -E "\t$3\t" $2/taxIDs.txt |  awk 'BEGIN {FS=" "} {print $1}' | tr '\n' ' ')
+}
+export -f secondaryFitHelper
+
 # paths
 SCRIPTPATH=$1
 CPUCORES=$3
@@ -35,8 +40,9 @@ function getcpu {
 
 cd $FILE
 
+# choice to run using either pathoscope or bitseq
 echo "$FILE: Running pathoscope stage"
-pathoscope ID -alignFile $FILE.sam -expTag $FILE -fileType sam
+pathoscope ID -alignFile $FILE.sam -expTag $FILE -fileType sam -thetaPrior $[10**88]
 rm -f $FILE.sam
 
 echo "$FILE: Running coverage stage"
@@ -82,9 +88,9 @@ done
 cd depth
 
 echo "$FILE: Performing secondary fits"
-cat $REFPATH/taxIDs.txt | awk 'BEGIN {FS=" "} {print $2}' | sort -u | parallel "\$SCRIPTPATH/bin/test.py \$REFPATH {} \$(grep -r \" {}\$\" \$REFPATH/taxIDs2.txt |  awk 'BEGIN {FS=\" \"} {print \$1}' | tr '\n' ' ')"
+cat $REFPATH/taxIDs.txt | awk 'BEGIN {FS=" "} {print $2}' | sort -u | parallel "secondaryFitHelper $SCRIPTPATH $REFPATH {}"
 
-parallel "\$SCRIPTPATH/bin/piecewiseFit.py {} \$REFPATH/Headers/ \$DORICPATH/" ::: *.npy
+parallel $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.npy
 
 cd ..
 

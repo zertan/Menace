@@ -190,8 +190,7 @@ def rejectOutliers(data, m = 2.):
     s = d/mdev if mdev else 0.
     return data[s<m]
 
-acc=os.path.splitext(sys.argv[1])[0]
-fileEnding=os.path.splitext(sys.argv[1])[1]
+acc,fileEnding=os.path.splitext(sys.argv[1])
 
 try:
 	if fileEnding==".depth":
@@ -199,6 +198,10 @@ try:
 		data=np.array(data).astype('int32')
 	elif fileEnding==".npy":
 		data=np.load(sys.argv[1])
+		#acc,fileEnding=os.path.splitext(acc)
+	else:
+		print("No file found: "+sys.argv[1])
+		sys.exit()
 except IOError as e:
 	print("I/O error "+sys.argv[1])
 	sys.exit()
