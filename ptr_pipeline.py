@@ -165,7 +165,7 @@ def compile_config(args,config):
     #except e:
     #    print("The data accession prefix (eg. ERR525) could not be retrieved. Enter manually? (y/n)")
 
-    if(config['Other']['DataPrefix']==""):
+    if(config['Other']['DataPrefix']=="" and not config['Other']['FtpURL']==""):
         start_ind1, data_prefix = get_data_prefix(config)
     else:
         start_ind1 = 0
@@ -414,4 +414,4 @@ if __name__ == "__main__":
     
     config = read_config(args)
     config = compile_config(args,config)
-	main(args,config)
+    main(args,config)
