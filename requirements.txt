@@ -5,4 +5,5 @@ xmltodict
 lmfit
 newick
 Jinja2
+bx-python
 -e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope

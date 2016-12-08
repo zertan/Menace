@@ -147,7 +147,7 @@ for ind, searchStrings in enumerate(inputStringChunks):
 
 		# limit fasta headers to first part of accession number for downstream tools
 		nl_ind = data[i].find('\n')+1
-		tmp_header = searchStr.split(".")[0]+'\n'
+		tmp_header = searchStr.split(" ")[0]+'\n'
 
 		outHandle.write(">"+tmp_header+data[i][nl_ind:])
 		outHandle.close()

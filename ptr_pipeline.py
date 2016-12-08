@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Generate scripts for running PTR pipeline on C3SE cluster.
 After verifying the command line arguments and the directory
 structure, this module generates the necessary scripts for running the

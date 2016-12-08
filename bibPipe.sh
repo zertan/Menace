@@ -3,9 +3,13 @@
 # on docker img
 
 #### fix headers
-# first strip referenes from : and - in header then:
+# first strip referenes from : and - and . in header then:
 
 ### check minimal LCB length -c
+
+## get all ACC belonging to certain TI, run for each TI
+## run generalize refs to each TI
+## limit nr of ACC in TI group
 
 ########## run in docker img
 #mugsy -p mult -c 300 Fasta/*.fasta #NC_000913.3.fasta NC_007779.1.fasta
