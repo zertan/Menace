@@ -29,7 +29,7 @@ def read_config(args):
     """Read project config."""
     config = configparser.ConfigParser(allow_no_value=True, inline_comment_prefixes=(';',))
     config.optionxform = str
-	config.read(args.config_file)
+    config.read(args.config_file)
 
     if type(args.email) is str:
         config['Other']['Email'] = args.email
