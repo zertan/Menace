@@ -19,6 +19,7 @@ import platform
 
 from jinja2 import Environment, FileSystemLoader
 
+CWD = os.getcwd()
 CODE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(os.path.dirname(CODE_DIR), "templates")
 DEFAULT_CONFIG = os.path.join(CODE_DIR, "project.conf")
@@ -27,7 +28,8 @@ DEFAULT_CONFIG = os.path.join(CODE_DIR, "project.conf")
 def read_config(args):
     """Read project config."""
     config = configparser.ConfigParser(allow_no_value=True, inline_comment_prefixes=(';',))
-    config.read(args.config_file)
+    config.optionxform = str
+	config.read(args.config_file)
 
     if type(args.email) is str:
         config['Other']['Email'] = args.email
