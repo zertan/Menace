@@ -4,4 +4,5 @@ pandas
 xmltodict
 lmfit
 newick
+Jinja2
 -e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope
