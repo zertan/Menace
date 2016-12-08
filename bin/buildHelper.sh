@@ -4,7 +4,7 @@ set -o pipefail # exit if error somewhere in pipe
 set -e #exit on execution error
 
 function mvAll {
-	mv $1 $(echo $1 | sed -E 's/.+(N[CTZ]_([A-Z]{2})*[0-9]{6}).+/\1\.bam/')
+mv $1 $(echo $1 | sed -E 's/.+(N[CTZ]_([A-Z]{2})*[0-9]{6}\.[0-9]+).+/\1\.bam/')
 }
 export -f mvAll
 
