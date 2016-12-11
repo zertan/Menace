@@ -6,6 +6,8 @@
 #IN1=sub1.fq
 #IN2=sub2.fq
 
+cat comm0/References/taxIDs.txt | awk -F $'\t' 'BEGIN {OFS = FS} {print $1 " " $3}' > meta
+
 python PTRC.py DB -metadata meta -fasta multi.fasta -out comm0/sim_db
 
 python PTRC.py -db_path_name comm0/sim_db CA -pe -i1 comm0/Data/$1 -i2 comm0/Data/$2 -m comm0/Data/sm.map -outfol comm0/
