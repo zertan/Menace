@@ -47,18 +47,18 @@ def doublingTime(p,g):
 	return float(b)/(np.log2(p)/float(g)-a)
 
 if(len(sys.argv) <= 1):
-	print("Usage: ./PTRMatrix.py DATA_PATH REF_PATH DORIC_PATH LOC_FILE")
+	print("Usage: ./PTRMatrix.py DATA_PATH REF_PATH OUT_PATH DORIC_PATH LOC_FILE")
 	sys.exit(1)
 
-if(len(sys.argv) == 4):
-	try:
-		oriData=pd.DataFrame.from_csv(join(sys.argv[4],"bacteria_record.dat"),  sep='	',index_col=1)
-	except:
-		koremOriData=pd.DataFrame.from_csv(sys.argv[4],  sep=';',index_col=0)
-
 if(len(sys.argv) == 5):
-	oriData=pd.DataFrame.from_csv(join(sys.argv[4],"bacteria_record.dat"),  sep='   ',index_col=1)
-	koremOriData=pd.DataFrame.from_csv(sys.argv[5],  sep=';',index_col=0)
+	try:
+		oriData=pd.DataFrame.from_csv(join(sys.argv[5],"bacteria_record.dat"),  sep='	',index_col=1)
+	except:
+		koremOriData=pd.DataFrame.from_csv(sys.argv[5],  sep=';',index_col=0)
+
+if(len(sys.argv) == 6):
+	oriData=pd.DataFrame.from_csv(join(sys.argv[5],"bacteria_record.dat"),  sep='   ',index_col=1)
+	koremOriData=pd.DataFrame.from_csv(sys.argv[6],  sep=';',index_col=0)
 
 #print(koremOriData.loc['NC_016845.1','OriC'])
 
@@ -314,17 +314,19 @@ tauTable=tauTable.sort('Name')
 tauTable=tauTable.sort_index(axis=1)
 #covTable=covTable.sort_index(axis=1)
 
+out_path=join(sys.argv[4],'Collect')
+
 try:
-	makedirs('collect')
+	makedirs(out_path)
 except:
 	pass
 
-headerTable.to_csv('collect/Header.csv',sep=";")
-ptrTable.to_csv('collect/PTR.csv',sep=";",index=False)
-tauTable.to_csv('collect/DoublingTime.csv',sep=";",index=False)
-abundanceTable.to_csv('collect/Abundance.csv',sep=";",index=False)
+headerTable.to_csv(join(out_path,'Header.csv'),sep=";")
+ptrTable.to_csv(join(out_path,'PTR.csv'),sep=";",index=False)
+tauTable.to_csv(join(out_path,'DoublingTime.csv'),sep=";",index=False)
+abundanceTable.to_csv(join(out_path,'Abundance.csv'),sep=";",index=False)
 
-print("\nOutput stored in ./collect")
+print(" ".join(["\nOutput stored in"]+[join(sys.argv[4],'Collect')]))
 #plt.plot(y, 'r-')
 #plt.savefig("asd.png")
 
