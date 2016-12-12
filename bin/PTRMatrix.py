@@ -22,6 +22,7 @@ from os import walk
 from os import makedirs
 import csv
 from numpy import matlib
+import re
 
 #import pickle
 
@@ -38,18 +39,11 @@ def circularMedian(p,g):
 def growthRate(p,g):
 	pc=np.float64(np.log2(p))
 	gc=np.float64(g)
-	#return 60*(np.complex64(40758.19485665451)*pc + (pc*(-np.complex64(1.687464401849046*10**29)*gc + np.complex64(2.11522568305484*10**36)*pc))/(-np.complex64(1.2717377634630342*10**81)*gc**2*pc + np.complex64(1.3977365097364606*10**95)*pc**3 +gc*(-np.complex64(1.6726091846180504*10**88)*pc**2 + np.sqrt(pc**2*(np.complex64(1.6173169390179603*10**162)*gc**2 + np.complex64(5.2461781099574525*10**169)*gc*pc -np.complex64(4.487649100428634*10**176)*pc**2))))**(1/3) + np.complex64(7.8536794502884655*10**(-28))*(-np.complex64(1.2717377634630342*10**81)*gc**2*pc + np.complex64(1.3977365097364606*10**95)*pc**3 +gc*(-np.complex64(1.6726091846180504*10**88)*pc**2 + np.sqrt(pc*2*(np.complex64(1.6173169390179603*10**162)*gc**2 + np.complex64(5.2461781099574525*10**169)*gc*pc -np.complex64(4.487649100428634*10**176)*pc**2))))**(1/3))/gc
-#	c=np.complex64(np.array([2.11522568305484*10**36,1.687464401849046*10**29,1.6173169390179603*10**162, 5.2461781099574525*10**169, 4.487649100428634*10**176,1.6726091846180504*10**88,1.2717377634630342*10**81,1.3977365097364606*10**95,7.8536794502884655*10**(-28),1.6173169390179603*10**162,5.2461781099574525*10**169,4.487649100428634*10**176,1.6726091846180504*10**88,1.2717377634630342*10**81,1.3977365097364606*10**95,40758.19485665451]))
-#	return	60*np.real(pc*(c[0]*pc - c[1]*gc)/np.power(gc*(np.sqrt(pc*(c[2]*gc + c[3]*gc*pc - c[4]*pc)) - c[5]*pc ) - c[6]*gc*pc + c[7]*pc, 1/3) + c[8]*np.power(gc*(np.sqrt(pc*(c[9]*gc  + c[10]*gc*pc - c[11]*pc )) -c[12]*pc ) - c[13]*gc*pc + c[14]*pc , 1/3)+c[15]*pc/gc)
-	#return  np.real(pc*(2.11522568305484*10**36*pc - 1.687464401849046*10**29*gc)/np.power(gc*(np.sqrt(pc*(1.6173169390179603*10**162*gc + 5.2461781099574525*10**169*gc*pc - 4.487649100428634*10**176*pc)) - 1.6726091846180504*10**88*pc ) - 1.2717377634630342*10**81*gc*pc + 1.3977365097364606*10**95*pc, 1/3) + 7.8536794502884655*10**(-28)*np.power(gc*(np.sqrt(pc*(1.6173169390179603*10**162*gc  + 5.2461781099574525*10**169*gc*pc - 4.487649100428634*10**176*pc )) -1.6726091846180504*10**88*pc ) - 1.2717377634630342*10**81*gc*pc + 1.3977365097364606*10**95*pc , 1/3)+40
 	return 2*60*np.log(2)*pc/gc
 
 def doublingTime(p,g):
 	a=-4.602311
 	b=1050.197
-	#print(a)
-	#print(b)
-	#print(b/(np.log2(p)/float(g)-a))
 	return float(b)/(np.log2(p)/float(g)-a)
 
 if(len(sys.argv) <= 1):
@@ -105,8 +99,6 @@ with open(join(sys.argv[2],'taxIDs.txt'), mode='r') as infile:
 
 
 print("Traversing directories and generating tables, please wait.")
-
-
 for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 	folderName=dirpath[-9:]
 	for fn in filenames:
@@ -119,11 +111,15 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 		if (fn.endswith('report.tsv')):
 			print(folderName)
 			tmpTable=pd.read_csv(join(sys.argv[1],dirpath,fn),delimiter='	',skiprows=1,index_col=0,usecols=[0, 1])
+			
 			for ti in tmpTable.index.values:
+				
 				try:
+					tmp_ti=re.match(r".*\|([0-9]+)\|.*",ti)
+					tmp_ti=tmp_ti.group(1)
 					#print(bacteriaName[ti[3:]])
-					abundanceTable.loc[ti[3:],'Name']=bacteriaName[ti[3:]]
-					abundanceTable.loc[ti[3:],folderName]=float(tmpTable.loc[ti])
+					abundanceTable.loc[tmp_ti,'Name']=bacteriaName[tmp_ti]
+					abundanceTable.loc[tmp_ti,folderName]=float(tmpTable.loc[ti])
 				except KeyError as e:
 					print('IndexError - "%s"' % str(e))
 					
@@ -170,7 +166,7 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 			oTable.loc[ACC,folderName]=vec[0]
 			tTable.loc[ACC,folderName]=vec[1]
 
-print(headerTable.values)
+print(oTable.values)
 
 
 lenVec=headerTable['Length'].values
@@ -189,14 +185,14 @@ ntTable=tTable.values
 oLoc=np.zeros(noTable.shape[0])
 tLoc=np.zeros(ntTable.shape[0])
 
-for i in range(0,noTable.shape[0]-1):
+for i in range(noTable.shape[0]):
 	idx=np.invert(np.isnan(noTable[i]))
-	if (np.sum(idx)>=sys.argv[3]):
+	if (np.sum(idx)>=int(sys.argv[3])):
 		oLoc[i]=circularMedian(noTable[i][idx],lenVec[i])
 		headerTable.ix[i,'OriC']=oLoc[i]
 
 	idx=np.invert(np.isnan(ntTable[i]))
-	if (np.sum(idx)>=sys.argv[3]):
+	if (np.sum(idx)>=int(sys.argv[3])):
 		tLoc[i]=circularMedian(ntTable[i][idx],lenVec[i])
 		headerTable.ix[i,'TerC']=tLoc[i]
 

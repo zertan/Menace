@@ -6,11 +6,11 @@
 #IN1=sub1.fq
 #IN2=sub2.fq
 
-python PTRC.py DB -metadata meta -fasta multi.fasta -out comm0/sim_db
-
-python PTRC.py -db_path_name comm0/sim_db CA -pe -i1 comm0/Data/$1 -i2 comm0/Data/$2 -m comm0/Data/sm.map -outfol comm0/
-
-python PTRC.py -db_path_name comm0/sim_db PTR -infol comm0/ -o comm0/Out/ptrc_out -minpred 1 -csv_output -preds predetermined
+cat comm0/References/Fasta/* > multi.fasta
+cat comm0/References/taxIDs.txt | awk -F $'\t' 'BEGIN {OFS = FS} {print "ti|"$2"|org|"$1"\t"$1}' > meta
+PTRC.py DB -metadata meta -fasta multi.fasta -out comm0/sim_db
+PTRC.py -db_path_name comm0/sim_db CA -pe -i1 comm0/Data/$1 -i2 comm0/Data/$2 -m comm0/Data/sm.map -outfol comm0/
+PTRC.py -db_path_name comm0/sim_db PTR -infol comm0/ -o comm0/Out/ptrc_out -minpred 1 # -csv_output #-preds predetermined
 
 #seqtk sample -s100 ERR525696_1.fastq 200000 > comm0/Data/sub1.fq
 #seqtk sample -s100 ERR525696_2.fastq 200000 > comm0/Data/sub2.fq

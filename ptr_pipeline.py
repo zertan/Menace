@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Generate scripts for running PTR pipeline on C3SE cluster.
 After verifying the command line arguments and the directory
 structure, this module generates the necessary scripts for running the
@@ -338,9 +338,9 @@ def generate_local_command(config):
     cmd = os.path.join(CODE_DIR,'jobscript '+ CODE_DIR)
     return cmd
 
-def generate_collect_command(config):
+def generate_collect_command(config,args):
     koremLoc=os.path.join(CODE_DIR,'extra/accLoc.csv')
-    cmd=CODE_DIR+"/bin/PTRMatrix.py {output_path} {ref_path} " + parser_c.min_orics + " {doric_path} " + koremLoc 
+    cmd=CODE_DIR+"/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {doric_path} " + koremLoc 
     return cmd.format(**config)
 
 # def print_instructions(config):
@@ -400,7 +400,7 @@ def main(args,config):
             process.wait()
 
     if(args.subparser_name=='collect'):
-        process = subprocess.Popen(generate_collect_command(config), shell=True)
+        process = subprocess.Popen(generate_collect_command(config,args), shell=True)
         process.wait()
     # prov = provider.get_provider(args['provider_name'], args['project_dir'])
     # p = project.Project(args, prov)

@@ -1,9 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np
-from scipy import signal
+#from scipy import signal
 from lmfit.models import Model
 from lmfit import conf_interval
 import sys
@@ -53,7 +53,7 @@ def chunks3(x, b, s):
 
 def binData(x,binSize):
 	l=np.ceil((len(x)/binSize))
-	out=np.zeros(l+1)
+	out=np.zeros(np.int32(l)+1)
 	tmp=chunks(x,binSize)
 	for i,val in enumerate(tmp):
 		out[i]=np.sum(val)
@@ -191,6 +191,8 @@ def rejectOutliers(data, m = 2.):
     return data[s<m]
 
 acc,fileEnding=os.path.splitext(sys.argv[1])
+
+print acc
 
 try:
 	if fileEnding==".depth":
