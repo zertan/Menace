@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Generate scripts for running PTR pipeline on C3SE cluster.
 After verifying the command line arguments and the directory
 structure, this module generates the necessary scripts for running the
@@ -34,7 +34,7 @@ def read_config(args):
     if type(args.email) is str:
         config['Other']['Email'] = args.email
     #elif 'Email' in config['Other'].keys():
-    elif not 'Email' in config['Other'].keys():
+    elif not 'Email' in list(config['Other'].keys()):
         raise NameError('No email specified. Edit email in the project config file or pass it as an argument with "-e".')
 
     return config

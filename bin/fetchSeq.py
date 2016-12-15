@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 '''
 Created on Sep 8, 2015
 
@@ -35,13 +35,13 @@ if not exists(join(args.dataPath,"Fasta")):
 	makedirs(join(args.dataPath,"Fasta"))
 
 if (isfile(args.searchFile)):
-	print("Using search file: " + args.searchFile)
+	print(("Using search file: " + args.searchFile))
 	with open(args.searchFile) as f:
 		inputStringInit = f.read().splitlines()
 	# basic checks
 	inputString = [a for a in inputStringInit if a != ""]
 	inputString=list(set(inputString))
-	print("Length of input: "+str(len(inputString)))
+	print(("Length of input: "+str(len(inputString))))
 	files = [ f[0:-6] for f in listdir(join(args.dataPath,"Fasta")) if f.endswith(".fasta") ]
 	#headers = [ f[0:-4] for f in listdir(join(args.dataPath,"Headers")) if f.endswith(".xml") ]
 	inputString = [string for string in inputString if string not in files]
@@ -87,8 +87,8 @@ for i, searchStr in enumerate(inputString2):
 		except IndexError:
 			errIndex.append(i*3+j)
 
-	print(repr(strLen-i)+" ",end="")
-	print(', '.join(searchStr))
+	#print(repr(strLen-i)+" ",end="")
+	print((', '.join(searchStr)))
 	if(strLen-i-1>0):
 		sleep(1)
 
@@ -97,7 +97,7 @@ if (matchNr==0):
 	exit()
 	#inputString=files
 
-print("Found "+repr(matchNr)+" matche(s). Downloading to "+repr(args.dataPath)+".")
+print(("Found "+repr(matchNr)+" matche(s). Downloading to "+repr(args.dataPath)+"."))
 
 # delete non found items from inputString
 errorString = [i for j, i in enumerate(inputString) if j in errIndex]
@@ -105,7 +105,7 @@ inputString = [i for j, i in enumerate(inputString) if j not in errIndex]
 
 if errorString:
 	print("\nNon found strings:")
-	print('\n'.join(errorString))
+	print(('\n'.join(errorString)))
 
 # update inputString to matched accessions if searched using organism name
 if extra=='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]':
@@ -132,7 +132,7 @@ queryKey = idResults["QueryKey"]
 
 # get sequences from Entrez in chunks of 100 (default)
 for ind, searchStrings in enumerate(inputStringChunks):
-	print("Fetching batch " +repr(ind+1))
+	print(("Fetching batch " +repr(ind+1)))
 	fetchHandle = Entrez.efetch(db="nuccore", query_key=queryKey,WebEnv=webenv,rettype="fasta",retmode="text",retstart=repr(ind*args.fetchNr),retmax=repr(args.fetchNr))
 	data = fetchHandle.read()
 	fetchHandle.close()
@@ -140,8 +140,8 @@ for ind, searchStrings in enumerate(inputStringChunks):
 	data=data.split('>')
 	data=data[1:]
 
-	print("Writing batch " +repr(ind+1))
-	print(len(data))
+	print(("Writing batch " +repr(ind+1)))
+	print((len(data)))
 	for i, searchStr in enumerate(searchStrings):
 		outHandle = open(join(args.dataPath,"Fasta",searchStr+".fasta"), "w")
 
@@ -167,7 +167,7 @@ if (args.taxBool):
 	data=data.split('<DocSum>')
 	data=data[1:]
 
-	print("Writing headers to "+str(args.dataPath))
+	print(("Writing headers to "+str(args.dataPath)))
 	for i, searchStr in enumerate(inputString):
 		data[i]=re.sub('</eSummaryResult>', '', data[i])
 		outHandle = open(join(args.dataPath,"Headers",searchStr+".xml"), "w")

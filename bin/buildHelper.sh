@@ -42,7 +42,7 @@ cd $FILE
 
 # choice to run using either pathoscope or bitseq
 echo "$FILE: Running pathoscope stage"
-pathoscope ID -alignFile $FILE.sam -expTag $FILE -fileType sam -thetaPrior $[10**88]
+pathoscope ID -alignFile $FILE.sam -expTag $FILE -fileType sam # -thetaPrior $[10**88]
 rm -f $FILE.sam
 
 echo "$FILE: Running coverage stage"

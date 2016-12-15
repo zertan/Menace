@@ -3,6 +3,7 @@ scipy
 pandas
 matplotlib
 xmltodict
+configparser
 lmfit
 newick
 Jinja2
