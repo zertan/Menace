@@ -12,6 +12,10 @@ from pandas import DataFrame
 import matplotlib.pyplot as plt
 import xmltodict
 import os
+from scipy.fftpack import fft, ifft
+
+def mv_filt(L,omega):
+    return (1/float(L))*(1-np.exp(-omega*1j*L))/(1-np.exp(-omega*1j))
 
 def chunks(l, n):
 	"""Yield successive n-sized chunks from l."""
@@ -190,9 +194,27 @@ def rejectOutliers(data, m = 2.):
     s = d/mdev if mdev else 0.
     return data[s<m]
 
+def pxn(x, C, l):
+    return (2**(1 + C - (2*C*x)/float(l))*C*np.log(2))/(float(l)*(-1 + 2**C));
+
+def fit_signal(signal,l):
+    x1=np.linspace(0,1,len(signal))
+    
+    piecewiseModel=Model(piecewise_prob)
+    piecewiseModel.set_param_hint('l',     value=1,vary=False)
+    piecewiseModel.set_param_hint('C',   vary=True,  value=.1,min=0,max=1)
+    piecewiseModel.make_params()
+    
+    res=piecewiseModel.fit(signal,x=x1,weights=np.sin(1.5*x1)+1.5)
+    return res
+
+def sharpen_filter(signal):
+    x = np.linspace(-0.00001*np.pi/float(1), 1*np.pi/float(1),10**3)
+    return np.roll(ifft(fft(signal,10**3)/mv_filt(1.27,x))[0:len(signal)],np.int64(-125/2))
+
 acc,fileEnding=os.path.splitext(sys.argv[1])
 
-print acc
+#print acc
 
 try:
 	if fileEnding==".depth":
@@ -235,7 +257,9 @@ except:
 	#yr = yr = np.zeros(genomeLen)
 	yr = data
 
-print(sys.argv[1])
+###########
+
+#print(sys.argv[1])
 
 #try:
 #	print(oriData[repr(sys.argv[1][:-6]])
@@ -406,6 +430,10 @@ if (len(y1)<25):
 #plt.plot(x1, y1,         'bo')
 #plt.savefig(str(sys.argv[1])+".bins.png")
 #plt.clf()
+#y1=sharpen_filter(y1)
+plt.plot(y1,'b')
+plt.savefig("".join([sys.argv[1],"blak"])+".png")
+plt.clf()
 
 print(sys.argv[1]+": Coverage OK ("+str(coveragePercentage)+" x).")
 x1=np.linspace(0,genomeLen-1,len(y1))
@@ -515,7 +543,6 @@ np.save(sys.argv[1],np.log2(y1))
 np.save(sys.argv[1]+".best",np.array([bestVal['Ol'],bestVal['Tl'],bestVal['Oc'],bestVal['Tc']]))
 
 f = open(sys.argv[1]+'.log', 'w')
-
 
 f.write(result.fit_report())
 

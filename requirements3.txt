@@ -1,6 +1,0 @@
-Biopython
-jinja2
-xmltodict
-pandas
-numpy
-scipy

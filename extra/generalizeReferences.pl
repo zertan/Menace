@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 # generalizeReferences returns a generalized reference from a 
-# set of pre aligned LCBs using for instance progressiveMauve.
+# set of pre aligned LCBs using for instance progressiveMauve
+# or mugsy.
 #
 # input: pre aligend LCBs sorted, with scalar identifiers in
 # 		 xmfa format

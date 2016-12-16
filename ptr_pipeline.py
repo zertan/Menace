@@ -5,9 +5,9 @@ structure, this module generates the necessary scripts for running the
 whole pipeline (for all samples). Adapted from rnaseq_pipeline by
 Matthias Nilsson <mattiasn@chalmers.se>.
 """
-
 import argparse
 import configparser
+import codecs
 import os
 import stat
 import sys
@@ -16,20 +16,23 @@ import ftplib
 import re
 from math import ceil
 import platform
-
 from jinja2 import Environment, FileSystemLoader
+from shutil import copy
+
+from lib.Community import local_conf, save_config
 
 CWD = os.getcwd()
 CODE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(os.path.dirname(CODE_DIR), "templates")
-DEFAULT_CONFIG = os.path.join(CODE_DIR, "project.conf")
+DEFAULT_CONFIG = os.path.join(CWD, "project.conf")
 
 
 def read_config(args):
     """Read project config."""
     config = configparser.ConfigParser(allow_no_value=True, inline_comment_prefixes=(';',))
     config.optionxform = str
-    config.read(args.config_file)
+    config.readfp(codecs.open(args.config_file, "r", "utf8"))
+    #config.read(args.config_file)
 
     if type(args.email) is str:
         config['Other']['Email'] = args.email
@@ -54,18 +57,21 @@ def get_parser():
 
     subparsers = parser.add_subparsers(dest='subparser_name')
 
+   
+    #parser_t.add_argument("-l", action='store_true',help='Test a local config.')
+    #parser_t.add_argument("-c", action='store_true',help='Test a minimal cluster config.')    
+
     parser_feSeq = subparsers.add_parser('fetch-data', help='download metagenomic sequences (using FTP)')
     parser_feSeq.add_argument("-t", dest='feSeq_threads', help='The number of simultaneous wget processes to use.',default=1)
-    
 
     parser_fe = subparsers.add_parser('fetch-references', help='download references from NCBI')
     parser_fe.add_argument("-s", dest='fe_srch_file', help='A file with search strings to download.',default='./searchStrings')
 
-    parser_b = subparsers.add_parser('build-index', help='build a bowtie2 index')
+    parser_b = subparsers.add_parser('build-index', help='build a mapping index')
     parser_b.add_argument("-t", dest='b_threads', help='The number of cpu threads to use.',default=1)
     #parser_b.add_argument("--opt4", action='store_true')
 
-    parser_m = subparsers.add_parser('make', help='generate an sbatch jobscript')
+    #parser_m = subparsers.add_parser('make', help='generate an sbatch jobscript')
     #parser_m.add_argument("-e", action='store_true')
 
     parser_s = subparsers.add_parser('run', help='submit job to slurm or run locally')
@@ -85,6 +91,12 @@ def get_parser():
     parser_c.add_argument("--minOrics", dest='min_orics', help='The minimum number of fitted origins needed to make an end estimate of a reference origin.',default=3)
     #parser_c.add_argument("--opt8", action='store_true')
 
+    parser_i = subparsers.add_parser('init', help='init an empty project in current directory')
+    parser_i.add_argument("-l", action='store_true',help='Generate a minimal local config.')
+    parser_i.add_argument("-c", action='store_true',help='Generate a minimal cluster config.')
+
+    parser_t = subparsers.add_parser('test', help='generate a test project and run it on a small example data set in current directory')
+
     return parser
 
     # parser.add_argument('-m', '--mode', dest='mode', type=str,
@@ -93,8 +105,6 @@ def get_parser():
 
 def parse_args(args):
     """Parse command line arguments"""
-    
-
     args = get_parser().parse_args(args)
     if(args.subparser_name=='full'):
         args.fe_srch_file='./searchStrings'
@@ -343,6 +353,34 @@ def generate_collect_command(config,args):
     cmd=CODE_DIR+"/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {output_path} {doric_path} " + koremLoc 
     return cmd.format(**config)
 
+def run_test_command(args):
+    conf = local_conf(CWD,'bowtie2','','1')
+    if args.email:
+        conf['email']=args.email
+    make_dirs(conf)
+    copy(os.path.join(CODE_DIR,'test','comm00_1.fastq'),os.path.join(CWD,'Data'))
+    copy(os.path.join(CODE_DIR,'test','comm00_2.fastq'),os.path.join(CWD,'Data'))
+    copy(os.path.join(CODE_DIR,'test','searchStrings'),CWD)
+    save_config(conf,conf)
+    return conf
+
+def run_init_command(args):
+    conf=local_conf(CWD,'bowtie2','','1')
+    if args.email:
+        conf['email']=args.email
+    copy(os.path.join(CODE_DIR,'test', 'searchStrings'),CWD)
+    make_dirs(conf)
+    save_config(conf,conf)
+    return conf
+
+def make_dirs(conf):
+    key_arr=['ref_path','data_path','output_path','doric_path']
+    for k in key_arr:
+        if not os.path.exists(conf[k]):
+            os.makedirs(conf[k])
+
+
+
 # def print_instructions(config):
 #     """Print instructions for executing pipeline."""
 #     print("The necessary scripts have now been generated. To execute the "
@@ -358,9 +396,23 @@ def generate_collect_command(config,args):
 #     print("")
 
 def main(args,config):
+    if(args.subparser_name=='init'):
+        run_init_command(args)
+        sys.exit()
+       
     if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
         process = subprocess.Popen(generate_fetch_seq_command(args,config), shell=True)
         process.wait()
+
+    if(args.subparser_name=='test'):
+        config=run_test_command(args)
+        
+        #streamdata = process.communicate()[0]
+        #if(process.returncode==0):
+        args.subparser_name='full'
+        args.fe_srch_file='searchStrings'
+        args.b_threads='1'
+        #args.
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch-references'):
         process = subprocess.Popen(generate_fetch_ref_command(args,config), shell=True)
@@ -388,10 +440,12 @@ def main(args,config):
                 process = subprocess.Popen(generate_gem_build_command(args,config), shell=True)
                 process.wait()
 
-    if((args.subparser_name=='full' and not config.cluster=='') or args.subparser_name=='make'):
-        generate_jobscript(config)
+    #if((args.subparser_name=='full' and not config.cluster=='') or args.subparser_name=='make'):
+    #    generate_jobscript(config)
 
     if(args.subparser_name=='full' or args.subparser_name=='run'):
+        generate_jobscript(config)
+
         if (config['cluster']==''):
             process = subprocess.Popen(generate_local_command(config), shell=True)
             process.wait()
@@ -410,10 +464,12 @@ def main(args,config):
     # generate_scripts(p, config)
     # print_instructions(p)
 
-
 if __name__ == "__main__":
     args = parse_args(sys.argv[1:])
-    
-    config = read_config(args)
-    config = compile_config(args,config)
+
+    if(not (args.subparser_name=='init' or args.subparser_name=='test')):
+        config = read_config(args)
+        config = compile_config(args,config)
+    else:
+        config=[]
     main(args,config)
