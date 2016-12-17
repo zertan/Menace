@@ -55,7 +55,7 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
+        #'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
     ],
 
@@ -92,7 +92,9 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        'test': ['comm0_1.fastq','comm0_2.fastq'],
+        'menace.test': ['comm00_1.fastq','comm00_2.fastq','searchStrings'],
+        'menace.templates': ['jobscript','jobscript_local'],
+        'menace.bin': ['interp.pl','mainBuildBowtie2.sh','buildHelper.sh','mainBuildGem.sh','changeTID.sh'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -107,7 +109,7 @@ setup(
     entry_points={
         'console_scripts': [
             'menace=menace.__main__:main',
-            #'fetch_seq=bin/fetchSeq.py',
+            'fetch_seq=menace.bin.fetchSeq:main',
         ],
     }
 )

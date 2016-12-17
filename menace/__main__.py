@@ -335,7 +335,7 @@ def generate_fetch_seq_command(args,config):
 def generate_fetch_ref_command(args,config):
     """Generate command for downloading reference fastas and headers."""
     #dir_path = os.path.dirname(os.path.realpath(__file__))
-    cmd = CODE_DIR+"/bin/fetchSeq.py -e {email} -t True -d {ref_path} -s " + args.fe_srch_file
+    cmd = "fetch_seq -e {email} -t True -d {ref_path} -s " + args.fe_srch_file
     return cmd.format(**config)
 
 def generate_sbatch_command(config):
@@ -395,7 +395,7 @@ def make_dirs(conf):
 #           "exit the virtual environment.")
 #     print("")
 
-def main(args,config):
+def main2(args,config):
     if(args.subparser_name=='init'):
         run_init_command(args)
         sys.exit()
@@ -464,7 +464,7 @@ def main(args,config):
     # generate_scripts(p, config)
     # print_instructions(p)
 
-if __name__ == "__main__":
+def main():
     args = parse_args(sys.argv[1:])
 
     if(not (args.subparser_name=='init' or args.subparser_name=='test')):
@@ -472,4 +472,7 @@ if __name__ == "__main__":
         config = compile_config(args,config)
     else:
         config=[]
-    main(args,config)
+    main2(args,config)
+
+if __name__ == "__main__":
+    main()

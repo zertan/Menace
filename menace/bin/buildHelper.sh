@@ -78,7 +78,7 @@ find . -size -100 -type f -name \*.depth
 
 echo "$FILE: Performing piecewise fits"
 
-parallel $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.depth
+parallel python $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.depth
 
 endings=("log" "png" "npy" "depth")
 for ending in ${endings[@]}; do
@@ -90,7 +90,7 @@ cd depth
 echo "$FILE: Performing secondary fits"
 cat $REFPATH/taxIDs.txt | awk 'BEGIN {FS=" "} {print $2}' | sort -u | parallel "secondaryFitHelper $SCRIPTPATH $REFPATH {}"
 
-parallel $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.npy
+parallel python $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.npy
 
 cd ..
 
