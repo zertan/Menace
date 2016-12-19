@@ -99,7 +99,7 @@ def get_parser():
 
     parser_t = subparsers.add_parser('test', help='generate a test project and run it on a small example data set in current directory')
 
-    parser_n = subparsers.add_parser('notebook', help='open a jupyter notebook of the project in the current directory with data import and analysis examples (requires jupyter)')
+    #parser_n = subparsers.add_parser('notebook', help='open a jupyter notebook of the project in the current directory with data import and analysis examples (requires jupyter)')
 
     return parser
 
@@ -364,7 +364,7 @@ def generate_collect_command(config,args):
     cmd=CODE_DIR + "/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {output_path} {doric_path} " + koremLoc
     return cmd.format(**config)
 
-def generate_notebook_command(config,args):
+def generate_notebook_command(args,config):
     copy(os.path.join(CODE_DIR,'extra','menace_run.ipynb'),CWD)
     cmd="jupyter notebook menace_run.ipynb &"
     return cmd.format(**config)
@@ -423,7 +423,7 @@ def main2(args,config):
     
     if(args.subparser_name=='notebook'):
         #run_init_command(args)
-        run_notebook_command(args)
+        process = Popen(generate_notebook_command(args,config), shell=True)
         exit()
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
@@ -482,7 +482,7 @@ def main2(args,config):
     if(args.subparser_name=='collect'):
         process = Popen(generate_collect_command(config,args), shell=True)
         process.wait()
-    
+
     # prov = provider.get_provider(args['provider_name'], args['project_dir'])
     # p = project.Project(args, prov)
     # p.verify_directory_structure()
