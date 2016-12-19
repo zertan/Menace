@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-import numpy as np
+#import numpy as np
 import sys
 import pandas as pd
 import xmltodict
-from os import listdir
-from os.path import isdir, join
+#from os import listdir
+from os.path import join
 from os import walk
 import csv
-from numpy import matlib
-import pickle
+#from numpy import matlib
+#import pickle
 
 ####
 # XML header example:

@@ -9,6 +9,12 @@ from os import environ
 environ['LC_ALL']='en_US.UTF-8'
 environ['LANG']='en_US.UTF-8'
 
+try:
+    import pypandoc
+    long_description = pypandoc.convert('README.md', 'rst')
+except(IOError, ImportError):
+    long_description = open('README.md').read()
+
 #here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
@@ -25,7 +31,7 @@ setup(
 
     description='A bioinformatics pipeline for estimation of relative cell periods.',
     
-    long_description=open('README.md').read(),
+    long_description=long_description,
 
     # The project's main homepage.
     url='https://www.github.com/SysBio/menace/',
@@ -46,8 +52,8 @@ setup(
         'Development Status :: 3 - Alpha',
 
         # Indicate who your project is intended for
-        'Intended Audience :: SysBio Research Staff',
-        'Topic :: Systems Biology :: Bioinformatics',
+		'Intended Audience :: Science/Research',
+		'Topic :: Scientific/Engineering :: Bio-Informatics',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
@@ -93,8 +99,9 @@ setup(
     # have to be included in MANIFEST.in as well.
     package_data={
         'menace.test': ['comm00_1.fastq','comm00_2.fastq','searchStrings'],
-        'menace.templates': ['jobscript','jobscript_local'],
+        'menace.templates': ['jobscript','jobscript_local','project.conf'],
         'menace.bin': ['interp.pl','mainBuildBowtie2.sh','buildHelper.sh','mainBuildGem.sh','changeTID.sh'],
+        'menace.extra': ['accLoc.csv'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may

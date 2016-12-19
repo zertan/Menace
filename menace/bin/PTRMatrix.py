@@ -3,7 +3,7 @@
 #matplotlib.use('Agg')
 
 import numpy as np
-from scipy.optimize import minimize
+#from scipy.optimize import minimize
 # from scipy import signal
 # from lmfit.models import Model
 # from lmfit import conf_interval
@@ -13,15 +13,15 @@ import pandas as pd
 #import matplotlib.pyplot as plt
 import xmltodict
 
-from os import listdir
-from os.path import isdir, join
+#from os import listdir
+from os.path import join
 
 #onlyfiles = [ f for f in listdir(sys.argv[1]) if isfile(join(mypath,f)) ]
 
 from os import walk
 from os import makedirs
 import csv
-from numpy import matlib
+#from numpy import matlib
 import re
 
 #import pickle

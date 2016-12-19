@@ -5,7 +5,7 @@ matplotlib.use('Agg')
 import numpy as np
 #from scipy import signal
 from lmfit.models import Model
-from lmfit import conf_interval
+#from lmfit import conf_interval
 import sys
 import pandas
 from pandas import DataFrame
@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import xmltodict
 import os
 from scipy.fftpack import fft, ifft
+from scipy.interpolate import UnivariateSpline
 
 def mv_filt(L,omega):
     return (1/float(L))*(1-np.exp(-omega*1j*L))/(1-np.exp(-omega*1j))
@@ -66,14 +67,14 @@ def binData(x,binSize):
 def movingAverageC(x,binSize,slide):
 	l=len(x)
 	iEnd=np.floor(l/slide)
-	out=np.zeros(iEnd);
+	out=np.zeros(int(iEnd));
 
 	for i,val in enumerate(chunks2(x,binSize,slide)):
 		out[i]=np.sum(val)
 	return out
 
 def movingMedianC(x,binSize,slide):
-    out=np.zeros(np.floor(len(x)/slide));
+    out=np.zeros(int(np.floor(len(x)/slide)));
 
     for i,val in enumerate(chunks2(x,binSize,slide)):
         out[i]=np.median(val)
@@ -208,9 +209,16 @@ def fit_signal(signal,l):
     res=piecewiseModel.fit(signal,x=x1,weights=np.sin(1.5*x1)+1.5)
     return res
 
+def smooth_signal(signal,length):
+    xi=np.linspace(0,1,len(signal))
+    xi2=np.linspace(0,1,length)
+    iss=UnivariateSpline(xi,signal,k=3)
+    iss.set_smoothing_factor(.00001)
+    return iss(xi2)
+
 def sharpen_filter(signal):
     x = np.linspace(-0.00001*np.pi/float(1), 1*np.pi/float(1),10**3)
-    return np.roll(ifft(fft(signal,10**3)/mv_filt(1.27,x))[0:len(signal)],np.int64(-125/2))
+    return ifft(fft(signal,10**3)/mv_filt(1.27,x))[0:len(signal)]
 
 acc,fileEnding=os.path.splitext(sys.argv[1])
 
@@ -430,10 +438,13 @@ if (len(y1)<25):
 #plt.plot(x1, y1,         'bo')
 #plt.savefig(str(sys.argv[1])+".bins.png")
 #plt.clf()
-#y1=sharpen_filter(y1)
+
+y1=smooth_signal(y1,10**3)
+y1=np.real(sharpen_filter(y1))
+plt.clf()
 plt.plot(y1,'b')
 plt.savefig("".join([sys.argv[1],"blak"])+".png")
-plt.clf()
+
 
 print(sys.argv[1]+": Coverage OK ("+str(coveragePercentage)+" x).")
 x1=np.linspace(0,genomeLen-1,len(y1))

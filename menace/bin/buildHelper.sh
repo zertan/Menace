@@ -85,15 +85,15 @@ for ending in ${endings[@]}; do
 	mkdir $ending && files=(*.$ending) && if [ "${#files[@]}" -ne 0 ]; then mv *.$ending $ending; fi
 done
 
-cd depth
+# cd depth
 
-echo "$FILE: Performing secondary fits"
-cat $REFPATH/taxIDs.txt | awk 'BEGIN {FS=" "} {print $2}' | sort -u | parallel "secondaryFitHelper $SCRIPTPATH $REFPATH {}"
+# echo "$FILE: Performing secondary fits"
+# cat $REFPATH/taxIDs.txt | awk 'BEGIN {FS=" "} {print $2}' | sort -u | parallel "secondaryFitHelper $SCRIPTPATH $REFPATH {}"
 
-parallel python $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.npy
+# parallel python $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.npy
 
-cd ..
+# cd ..
 
-mkdir log2 && mv depth/*.log log2
-mkdir png2 && mv depth/*.png png2
-mkdir npy2 && mv depth/*.npy npy2
+# mkdir log2 && mv depth/*.log log2
+# mkdir png2 && mv depth/*.png png2
+# mkdir npy2 && mv depth/*.npy npy2

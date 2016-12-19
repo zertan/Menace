@@ -9,17 +9,17 @@ import argparse
 import configparser
 import codecs
 import os
-import stat
 import sys
-import subprocess
-import ftplib
+from sys import exit
+from subprocess import Popen
+from ftplib import FTP
 import re
 from math import ceil
-import platform
+from platform import system
 from jinja2 import Environment, FileSystemLoader
 from shutil import copy
 
-from lib.Community import local_conf, save_config
+from lib.Community import local_conf
 
 CWD = os.getcwd()
 CODE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -88,7 +88,7 @@ def get_parser():
 
     parser_c = subparsers.add_parser('collect', help='collect output cluster data')
     parser_c.add_argument("-o", dest='c_out_path', help='Path to store output.',default="./")
-    parser_c.add_argument("--minOrics", dest='min_orics', help='The minimum number of fitted origins needed to make an end estimate of a reference origin.',default=3)
+    parser_c.add_argument("--minOrics", dest='min_orics', help='The minimum number of fitted origins needed to make an end estimate of a reference origin.',default=1)
     #parser_c.add_argument("--opt8", action='store_true')
 
     parser_i = subparsers.add_parser('init', help='init an empty project in current directory')
@@ -224,40 +224,48 @@ def compile_config(args,config):
         # 'c_out_path': args.c_out_path,
         # 'feSeq_threads': feSeq_threads
 
+def save_config(config):
+    render_conf('project.conf',config,CWD,'project.conf')
+
 def generate_jobscript(config):
-    env = Environment(loader=FileSystemLoader(os.path.join(CODE_DIR,'templates')))
+    template = 'jobscript'
+
     if (config['cluster']==''):
-        template = env.get_template('jobscript_local')
-    else:
-        template = env.get_template('jobscript')
+        template = 'jobscript_local'
 
-    with open(os.path.join(CODE_DIR,'jobscript'), 'w') as f:
-        output = template.render(
-            project=config['project'],
-            cluster=config['cluster'],
-            job_name=config['job_name'],
-            job_nodes=config['job_nodes'],
-            cpu_cores=config['cpu_cores'],
-            estimated_time=config['estimated_time'],
-            
-            node_path=config['node_path'],
-            ref_path=config['ref_path'],
-            data_path=config['data_path'],
-            output_path=config['output_path'],
-            doric_path=config['doric_path'],
+    render_conf(template,config,CWD,'jobscript')
 
-            mapper=config['mapper'],
-            ref_name=config['ref_name'],
-            nr_samples=config['nr_samples'],
-            samples_per_node=min(int(config['samples_per_node']),int(config['nr_samples'])),
-            email=config['email'],
-            data_prefix=config['data_prefix'],
-            start_ind=config['start_ind'],
-            job_range=config['job_range']
-        )
-        f.write(output)
-        os.chmod(os.path.join(CODE_DIR,'jobscript'),0o777)
+def render_conf(template,config,path,name):
+    path=os.path.join(path,name)
+    env = Environment(loader=FileSystemLoader(os.path.join(CODE_DIR,'templates')))
+    template = env.get_template(template)
+    
+    with open(path, 'w') as f:
+            output = template.render(
+                project=config['project'],
+                cluster=config['cluster'],
+                job_name=config['job_name'],
+                job_nodes=config['job_nodes'],
+                cpu_cores=config['cpu_cores'],
+                estimated_time=config['estimated_time'],
+                
+                node_path=config['node_path'],
+                ref_path=config['ref_path'],
+                data_path=config['data_path'],
+                output_path=config['output_path'],
+                doric_path=config['doric_path'],
 
+                mapper=config['mapper'],
+                ref_name=config['ref_name'],
+                nr_samples=config['nr_samples'],
+                samples_per_node=min(int(config['samples_per_node']),int(config['nr_samples'])),
+                email=config['email'],
+                data_prefix=config['data_prefix'],
+                start_ind=config['start_ind'],
+                job_range=config['job_range']
+            )
+            f.write(output)
+            os.chmod(path,0o777)
 
 # def generate_pipeline_script(project, config, env):
 #     """Generate script for running complete pipeline."""
@@ -284,7 +292,7 @@ def generate_bt2_build_command(args,config):
     files=[f for f in os.listdir(d)]
     referenceList=",".join(files)
     #os.environ['reflist'] = referenceList
-    #proc = subprocess.Popen("for f in " + d + "/*.fasta" + '; do cat "$f" >> tmpfasta', shell=True)
+    #proc = Popen("for f in " + d + "/*.fasta" + '; do cat "$f" >> tmpfasta', shell=True)
     #print(referenceList)
 
     cmd = "(cd " + d + " && bowtie2-build --large-index " + "--threads " + str(args.b_threads) + " " + referenceList + " " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
@@ -299,16 +307,16 @@ def generate_gem_build_command(args,config):
     #files=[f for f in os.listdir(d)]
     #referenceList=",".join(files)
     #os.environ['reflist'] = referenceList
-    #proc = subprocess.Popen("for f in " + d + "/*.fasta" + '; do cat "$f" >> tmpfasta', shell=True)
+    #proc = Popen("for f in " + d + "/*.fasta" + '; do cat "$f" >> tmpfasta', shell=True)
     #print(referenceList)
-    if (platform.system()=='Linux'):
+    if (system()=='Linux'):
         cmd = "(cd " + d + " && gem-indexer " + "-T " + str(args.b_threads) + " -i " + os.path.join(d,"multi.fasta") + " -o " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
-    elif (platform.system()=='Darwin'): # for Mac OS X assume older (2010) binaries
+    elif (system()=='Darwin'): # for Mac OS X assume older (2010) binaries
         cmd = "(cd " + d + " && gem-do-index " + " -i " + os.path.join(config['ref_path'],"Fasta","multi.fasta") + " -o " + os.path.join(config['ref_path'],"Index",config['ref_name']) + ")"
     return cmd
 
 def get_data_prefix(config):
-    f = ftplib.FTP(config['Other']['FtpURL'])
+    f = FTP(config['Other']['FtpURL'])
     f.login()
     f.cwd(config['Other']['DataURL'])
     dirs=get_current_dir_subdirs(f)
@@ -345,12 +353,13 @@ def generate_sbatch_command(config):
 
 def generate_local_command(config):
     """Generate command for performing a local run."""
-    cmd = os.path.join(CODE_DIR,'jobscript '+ CODE_DIR)
+    cmd = os.path.join(CWD,'jobscript '+ CODE_DIR)
     return cmd
 
 def generate_collect_command(config,args):
     koremLoc=os.path.join(CODE_DIR,'extra/accLoc.csv')
-    cmd=CODE_DIR+"/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {output_path} {doric_path} " + koremLoc 
+    cmd=CODE_DIR + "/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {output_path} {doric_path} " + koremLoc
+    print cmd.format(**config)
     return cmd.format(**config)
 
 def run_test_command(args):
@@ -361,17 +370,17 @@ def run_test_command(args):
     copy(os.path.join(CODE_DIR,'test','comm00_1.fastq'),os.path.join(CWD,'Data'))
     copy(os.path.join(CODE_DIR,'test','comm00_2.fastq'),os.path.join(CWD,'Data'))
     copy(os.path.join(CODE_DIR,'test','searchStrings'),CWD)
-    save_config(conf,conf)
+    save_config(conf)
     return conf
 
 def run_init_command(args):
-    conf=local_conf(CWD,'bowtie2','','1')
+    config=local_conf(CWD,'bowtie2','','1')
     if args.email:
-        conf['email']=args.email
+        config['email']=args.email
     copy(os.path.join(CODE_DIR,'test', 'searchStrings'),CWD)
-    make_dirs(conf)
-    save_config(conf,conf)
-    return conf
+    make_dirs(config)
+    save_config(config)
+    return config
 
 def make_dirs(conf):
     key_arr=['ref_path','data_path','output_path','doric_path']
@@ -379,6 +388,11 @@ def make_dirs(conf):
         if not os.path.exists(conf[k]):
             os.makedirs(conf[k])
 
+    ref_sub=['Fasta','Headers','Index']
+    rp=conf['ref_path']
+    for d in ref_sub:
+        if not os.path.exists(os.path.join(rp,d)):
+            os.makedirs(os.path.join(rp,d))
 
 
 # def print_instructions(config):
@@ -398,10 +412,10 @@ def make_dirs(conf):
 def main2(args,config):
     if(args.subparser_name=='init'):
         run_init_command(args)
-        sys.exit()
+        exit()
        
     if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
-        process = subprocess.Popen(generate_fetch_seq_command(args,config), shell=True)
+        process = Popen(generate_fetch_seq_command(args,config), shell=True)
         process.wait()
 
     if(args.subparser_name=='test'):
@@ -415,11 +429,11 @@ def main2(args,config):
         #args.
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch-references'):
-        process = subprocess.Popen(generate_fetch_ref_command(args,config), shell=True)
+        process = Popen(generate_fetch_ref_command(args,config), shell=True)
         process.wait()
 
     if(args.subparser_name=='full' or args.subparser_name=='build-index'):
-        process = subprocess.Popen(CODE_DIR+"/bin/changeTID.sh " + config['ref_path'], shell=True)
+        process = Popen(CODE_DIR+"/bin/changeTID.sh " + config['ref_path'], shell=True)
         process.wait()
         
         tmp_dir=os.path.join(config['ref_path'],"Index")
@@ -431,13 +445,13 @@ def main2(args,config):
             pass
         else:
             if(config['mapper']=='bowtie2'):
-                process = subprocess.Popen(generate_bt2_build_command(args,config), shell=True)
+                process = Popen(generate_bt2_build_command(args,config), shell=True)
                 process.wait()
             elif(config['mapper']=='gem'):
-                process = subprocess.Popen(CODE_DIR+"/extra/concatenateFasta.sh " + os.path.join(config['ref_path'],'Fasta'), shell=True)
+                process = Popen(CODE_DIR+"/extra/concatenateFasta.sh " + os.path.join(config['ref_path'],'Fasta'), shell=True)
                 process.wait()
 
-                process = subprocess.Popen(generate_gem_build_command(args,config), shell=True)
+                process = Popen(generate_gem_build_command(args,config), shell=True)
                 process.wait()
 
     #if((args.subparser_name=='full' and not config.cluster=='') or args.subparser_name=='make'):
@@ -447,14 +461,14 @@ def main2(args,config):
         generate_jobscript(config)
 
         if (config['cluster']==''):
-            process = subprocess.Popen(generate_local_command(config), shell=True)
+            process = Popen(generate_local_command(config), shell=True)
             process.wait()
         else:
-            process = subprocess.Popen(generate_sbatch_command(config), shell=True)
+            process = Popen(generate_sbatch_command(config), shell=True)
             process.wait()
 
     if(args.subparser_name=='collect'):
-        process = subprocess.Popen(generate_collect_command(config,args), shell=True)
+        process = Popen(generate_collect_command(config,args), shell=True)
         process.wait()
     # prov = provider.get_provider(args['provider_name'], args['project_dir'])
     # p = project.Project(args, prov)
