@@ -27,9 +27,9 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1',
+    version='0.1.2',
 
-    description='A bioinformatics pipeline for estimation of relative cell periods.',
+    description='A metagenomics pipeline to estimate relative cell periods.',
     
     long_description=long_description,
 
@@ -81,7 +81,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     #setup_requires=[],
-    install_requires=["numpy","scipy","pandas","biopython","matplotlib","xmltodict","configparser","lmfit","newick","Jinja2"],
+    install_requires=["numpy","scipy","pandas","biopython","matplotlib","xmltodict","configparser","lmfit","newick","Jinja2","docker"],
  #11 bx-python
  #-e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope],
     dependency_links = ['https://github.com/PathoScope/PathoScope/tarball'],
@@ -100,8 +100,8 @@ setup(
     package_data={
         'menace.test': ['comm00_1.fastq','comm00_2.fastq','searchStrings'],
         'menace.templates': ['jobscript','jobscript_local','project.conf'],
-        'menace.bin': ['interp.pl','mainBuildBowtie2.sh','buildHelper.sh','mainBuildGem.sh','changeTID.sh'],
-        'menace.extra': ['accLoc.csv'],
+        'menace.bin': ['interp.pl','mainBuildbowtie2.sh','buildHelper.sh','mainBuildgem.sh','changeTID.sh'],
+        'menace.extra': ['accLoc.csv','menace_run.ipynb'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may

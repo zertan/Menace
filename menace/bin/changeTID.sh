@@ -10,7 +10,7 @@ do
 	LINE="$(head -1 "$1/Fasta/${arr[0]}.fasta")"
 	
 	if [[ $(uname) == 'Linux' ]]; then
-		if [[ ! "$LINE" =~ ^>ti|.* ]]; then
+		if [[ ! "$LINE" =~ ^\>ti|.* ]]; then
 			LINE2=$(echo "$LINE" | sed "s/^>/>ti|${arr[1]}|org|/")
 			echo "$LINE2"
 			if [ "$LINE"!="$LINE2" ]; then

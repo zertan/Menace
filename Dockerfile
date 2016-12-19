@@ -53,6 +53,7 @@ RUN conda config --add channels conda-forge \
  && conda install samtools \
  && conda install bamtools \
  && conda install bowtie2 \
+ && conda install menace \
  && conda clean -a --yes
 
 # bitseq
@@ -63,7 +64,7 @@ RUN conda config --add channels conda-forge \
 # && make
 
 # menace pipeline
-RUN mkdir -p $MENACE_DIR && \
-    cd /opt && \
-    git clone https://github.com/zertan/PTR-Pipeline.git \
- && pip install --no-cache-dir --no-cache -r PTR-Pipeline/requirements.txt
+#RUN mkdir -p $MENACE_DIR && \
+#    cd /opt && \
+#    git clone https://github.com/zertan/PTR-Pipeline.git \
+# && pip install --no-cache-dir --no-cache -r PTR-Pipeline/requirements.txt

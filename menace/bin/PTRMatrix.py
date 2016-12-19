@@ -288,14 +288,15 @@ ptrTable=ptrTable.sort_index(axis=1)
 
 #abTable=abundanceTable.loc[ptrTable['Name'].isin(ptrTable['Name'])]
 #print(ptrTable.to_string)
-try:
-	abTable=abundanceTable[abundanceTable['Name'].isin(ptrTable['Name'])]
-	abTable=abTable.sort('Name')
-	abTable=abTable.sort_index(axis=1)
-	abTable.to_csv('AbundancePTR.csv',sep=";")
-except:
-	pass
-
+####
+#try:
+#	abTable=abundanceTable[abundanceTable['Name'].isin(ptrTable['Name'])]
+#	abTable=abTable.sort('Name')
+#	abTable=abTable.sort_index(axis=1)
+#	abTable.to_csv('AbundancePTR.csv',sep=";")
+#except:
+#	pass
+###
 #try:
 #	covTable=covTable[covTable['Name'].isin(ptrTable['Name'])]
 #	covTable=covTable.sort('Name')

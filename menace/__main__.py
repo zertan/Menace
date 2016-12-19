@@ -1,9 +1,11 @@
 #!/usr/bin/env python
-"""Generate scripts for running PTR pipeline on C3SE cluster.
+"""Menace - Metagenomic Estimation of Relative Cell Periods
 After verifying the command line arguments and the directory
 structure, this module generates the necessary scripts for running the
 whole pipeline (for all samples). Adapted from rnaseq_pipeline by
 Matthias Nilsson <mattiasn@chalmers.se>.
+
+@author Daniel Hermansson hedani@chalmers.se
 """
 import argparse
 import configparser
@@ -44,8 +46,8 @@ def read_config(args):
 
 def get_parser():
     """Get command line argument parser."""
-    parser = argparse.ArgumentParser(prog='ptr-pipeline',
-                                     description=("Perform tasks (individually or grouped) to extract PTR values of a metagenomic cohort. Before using the script, please edit the necessary information in the supplied configuration file."))
+    parser = argparse.ArgumentParser(prog='menace',
+                                     description=("Perform tasks (individually or grouped) to extract relative cell periods from a metagenomic cohort. Before using the software, please edit the necessary information in the supplied configuration file after running 'menace init'."))
 
     parser.add_argument('-e', '--email', dest='email',
                         type=str, required=False,
@@ -96,6 +98,8 @@ def get_parser():
     parser_i.add_argument("-c", action='store_true',help='Generate a minimal cluster config.')
 
     parser_t = subparsers.add_parser('test', help='generate a test project and run it on a small example data set in current directory')
+
+    parser_n = subparsers.add_parser('notebook', help='open a jupyter notebook of the project in the current directory with data import and analysis examples (requires jupyter)')
 
     return parser
 
@@ -217,7 +221,6 @@ def compile_config(args,config):
         'data_url': config['Other']['DataURL']
     }
     return conf
-
 
         # 'fe_srch_file': args.fe_srch_file,
         # 'b_threads': args.b_threads,
@@ -359,7 +362,11 @@ def generate_local_command(config):
 def generate_collect_command(config,args):
     koremLoc=os.path.join(CODE_DIR,'extra/accLoc.csv')
     cmd=CODE_DIR + "/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {output_path} {doric_path} " + koremLoc
-    print cmd.format(**config)
+    return cmd.format(**config)
+
+def generate_notebook_command(config,args):
+    copy(os.path.join(CODE_DIR,'extra','menace_run.ipynb'),CWD)
+    cmd="jupyter notebook menace_run.ipynb &"
     return cmd.format(**config)
 
 def run_test_command(args):
@@ -413,7 +420,12 @@ def main2(args,config):
     if(args.subparser_name=='init'):
         run_init_command(args)
         exit()
-       
+    
+    if(args.subparser_name=='notebook'):
+        #run_init_command(args)
+        run_notebook_command(args)
+        exit()
+
     if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
         process = Popen(generate_fetch_seq_command(args,config), shell=True)
         process.wait()
@@ -470,6 +482,7 @@ def main2(args,config):
     if(args.subparser_name=='collect'):
         process = Popen(generate_collect_command(config,args), shell=True)
         process.wait()
+    
     # prov = provider.get_provider(args['provider_name'], args['project_dir'])
     # p = project.Project(args, prov)
     # p.verify_directory_structure()
