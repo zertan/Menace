@@ -25,7 +25,7 @@ cd $DATAPATH
 declare -a files
 
 shopt -s nullglob
-fileEndings=(".fq" ".fastq" ".fq.bz2" ".fastq.gz" ".fastq.bz2" ".fastq.gz")
+fileEndings=(".fastq" ".fq.bz2" ".fastq.gz" ".fastq.bz2" ".fastq.gz")
 
 for ending in "${fileEndings[@]}"; do
     files=( *_1"$ending" )
@@ -39,7 +39,7 @@ done
 for fn in "${files[@]}"; do
 	echo "Aligning $fn:"
 	>&2 echo "$fn:"
-	bowtie2 -k 8 --very-sensitive --score-min L,0,1.2 -p $CPUCORES -x $REFPATH/Index/$REFNAME -1 "$fn"_1"$fileEnding" -2 "$fn"_2"$fileEnding" -S "$fn".sam --un-gz single_un_"$fn".fastq.gz --un-conc-gz paired_un_"$fn".fastq.gz --no-unal
+	bowtie2 -k 8 --very-sensitive -p $CPUCORES -x $REFPATH/Index/$REFNAME -1 "$fn"_1"$fileEnding" -2 "$fn"_2"$fileEnding" -S "$fn".sam --un-gz single_un_"$fn".fastq.gz --un-conc-gz paired_un_"$fn".fastq.gz --no-unal
 done
 
 parallel -j $CPUCORES mv single_un_{}.fastq.gz $OUTPATH ::: "${files[@]}"
@@ -52,4 +52,4 @@ parallel "mkdir {} && mv {}.sam {}" ::: "${files[@]}"
 echo "Moving into subjobs"
 parallel -j $SUBJOB $SCRIPTPATH/bin/buildHelper.sh $1 $2 $SUBCPU $4 {} $SUBJOB ::: "${files[@]}"
 
-echo "Finnished. Data in " $OUTPATH
+echo "Finnished. Data in" $OUTPATH

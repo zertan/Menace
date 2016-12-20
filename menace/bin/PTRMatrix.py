@@ -21,7 +21,7 @@ from os.path import join
 from os import walk
 from os import makedirs
 import csv
-#from numpy import matlib
+from numpy.matlib import repmat
 import re
 
 #import pickle
@@ -30,8 +30,8 @@ def circularMedian(p,g):
 	def tmFun():	
 		pm=np.asmatrix(p)
 		pLen=p.shape[0]
-		m1=np.max(np.mod(np.matlib.repmat(pm.T,1,pLen)-np.matlib.repmat(pm,pLen,1),g),0)
-		m2=np.min(np.mod(np.matlib.repmat(pm.T,1,pLen)-np.matlib.repmat(pm,pLen,1),g),0)
+		m1=np.max(np.mod(repmat(pm.T,1,pLen)-repmat(pm,pLen,1),g),0)
+		m2=np.min(np.mod(repmat(pm.T,1,pLen)-repmat(pm,pLen,1),g),0)
 		return pm[0,np.argmin(m1-m2)]
 	tm=tmFun()
 	return np.mod(np.median(np.mod(p-tm,g))+tm,g)
@@ -45,6 +45,13 @@ def doublingTime(p,g):
 	a=-4.602311
 	b=1050.197
 	return float(b)/(np.log2(p)/float(g)-a)
+
+remove=["python" "-W" "ignore"]
+for r in remove:
+	try:
+		sys.argv.remove("python")
+	except:
+		pass
 
 if(len(sys.argv) <= 1):
 	print("Usage: ./PTRMatrix.py DATA_PATH REF_PATH OUT_PATH DORIC_PATH LOC_FILE")

@@ -379,7 +379,7 @@ def generate_local_command(config):
 
 def generate_collect_command(config,args):
     koremLoc=os.path.join(CODE_DIR,'extra/accLoc.csv')
-    cmd=CODE_DIR + "/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {output_path} {doric_path} " + koremLoc
+    cmd="python -W ignore " + CODE_DIR + "/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {output_path} {doric_path} " + koremLoc
     return cmd.format(**config)
 
 def generate_notebook_command(args,config):
@@ -434,21 +434,34 @@ def make_dirs(conf):
 #           "exit the virtual environment.")
 #     print("")
 
+def is_non_zero_file(fpath):  
+    return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
+
 def main2(args,config):
     if(args.subparser_name=='init'):
         run_init_command(args)
         exit()
     
     if(args.subparser_name=='notebook'):
-        #run_init_command(args)
+        if (not exists(join(CWD,'project.conf'))):
+            run_init_command(args)
         process = Popen(generate_notebook_command(args,config), shell=True)
         exit()
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
-        #process = Popen(generate_fetch_seq_command(args,config), shell=True)
-        
-        execute(generate_fetch_seq_command(args,config))
-        #process.wait()
+        ans='run'
+        if (config['DataURL']=='' or config['FtpURL']==''):
+            ans='skip'
+            ans=raw_input('DataURL or FtpURL empty in project.conf, skip fetch-data or end? [skip]/end: ')
+        #if ans=='skip':
+            #process = Popen(generate_fetch_seq_command(args,config), shell=True)
+        #    break
+            #process.wait()
+        if ans=='end':
+            exit()
+
+        if not ans=='skip':
+            execute(generate_fetch_seq_command(args,config))
 
     if(args.subparser_name=='test'):
         config=run_test_command(args)
@@ -461,6 +474,15 @@ def main2(args,config):
         #args.
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch-references'):
+        #print(os.path.join(CWD,'searchStrings'))
+        #ans='run'
+        #if (is_non_zero_file(os.path.join(CWD,'searchStrings'))):
+        #    ans='skip'
+        #    ans=raw_input('searchStrings empty or non existent, skip fetch-references or end? [skip]/end: ')
+        #if ans=='end':
+        #    exit()
+
+        #if not ans=='skip':
         process = Popen(generate_fetch_ref_command(args,config), shell=True)
         process.wait()
 

@@ -14,17 +14,22 @@ function secondaryFitHelper {
 export -f secondaryFitHelper
 
 function rep_sel {
-	acs = ( `grep $1` )
-	max = 0
-	i = 0
+	cs=( `grep $1 $2/taxIDs.txt | awk '{print $1}'` )
+	max=0
+ 	i=0
+	i_max=0
 	for ac in ${acs[@]}; do
-		tmp = `perl -nle '$s += $_; END { print $s }' ac.depth`
-		((tmp > max)) && max=$tmp && i_max=$i
-		i=[$i+1]
-	done
-	echo ${ac[$_imax]}
-}
-export -f rep_sel
+		echo $ac
+		if [ -a $ac.depth ]; then
+			tmp=`perl -nle '$s += $_; END { print $s }' $ac.depth`
+			len=( `wc -l $ac.depth` )
+			((tmp > max)) && max=`bc <<< "scale = 4; $tmp/$len"` && i_max=$i
+		fi
+ 	i=[$i+1]
+    done
+    echo ${ac[$i_max]}
+ }
+ export -f rep_sel
 
 function getcpu {
 	pathojobs=$(pgrep "pathoscope ID" | wc -l)
@@ -89,12 +94,12 @@ rm -f *.bam
 
 find . -size -100 -type f -name \*.depth
 
-echo "Selecting representative strains"
-acs = ( `awk '{print $1}' $REFPATH/taxIDs.txt | uniq -u` )
-tis = ( `awk '{print $2}' $REFPATH/taxIDs.txt | uniq -u` )
-reps = ( parallel rep_sel {} ::: ${tis[@]} )
-remove = (`echo ${acs[@]} ${reps[@]} | tr ' ' '\n' | sort | uniq -u `)
-parallel rm -f {}.depth ::: ${remove[@]}
+#echo "Selecting representative strains"
+#acs=( `awk '{print $1}' $REFPATH/taxIDs.txt` )
+#tis=( `awk '{print $2}' $REFPATH/taxIDs.txt | uniq` )
+#reps=( `parallel rep_sel {} $REFPATH ::: ${tis[@]}` )
+#remove=(`echo ${acs[@]} ${reps[@]} | tr ' ' '\n' | sort | uniq -u `)
+#parallel rm -f {}.depth ::: ${remove[@]}
 
 echo "$FILE: Performing piecewise fits"
 parallel python $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.depth
