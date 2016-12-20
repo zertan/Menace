@@ -13,7 +13,7 @@ import codecs
 import os
 import sys
 from sys import exit
-from subprocess import Popen
+from subprocess import Popen, PIPE, STDOUT
 from ftplib import FTP
 import re
 from math import ceil
@@ -28,6 +28,24 @@ CODE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(os.path.dirname(CODE_DIR), "templates")
 DEFAULT_CONFIG = os.path.join(CWD, "project.conf")
 
+def execute(command):
+    process = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
+
+    # Poll process for new output until finished
+    while True:
+        nextline = process.stdout.readline()
+        if nextline == '' and process.poll() is not None:
+            break
+        sys.stdout.write(nextline)
+        sys.stdout.flush()
+
+    output = process.communicate()[0]
+    exitCode = process.returncode
+
+    if (exitCode == 0):
+        return output
+    else:
+        raise ProcessException(command, exitCode, output)
 
 def read_config(args):
     """Read project config."""
@@ -427,8 +445,10 @@ def main2(args,config):
         exit()
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch-data'):
-        process = Popen(generate_fetch_seq_command(args,config), shell=True)
-        process.wait()
+        #process = Popen(generate_fetch_seq_command(args,config), shell=True)
+        
+        execute(generate_fetch_seq_command(args,config))
+        #process.wait()
 
     if(args.subparser_name=='test'):
         config=run_test_command(args)

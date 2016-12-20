@@ -53,8 +53,8 @@ RUN conda config --add channels conda-forge \
  && conda install samtools \
  && conda install bamtools \
  && conda install bowtie2 \
- && conda install menace \
- && conda clean -a --yes
+ && conda clean -a --yes \
+ && pip install --no-cache-dir --no-cache menace
 
 # bitseq
 #RUN mkdir -p $BITSEQ_DIR && \

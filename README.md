@@ -1,5 +1,112 @@
-# PTR Extraction Software
+# Menace
 This bundle of software is a basic implementation of the algorithm for extracting Peak-to-Trough Ratios from Metagenomic data, as first described in [(Korem et. al, Science, 2015)](http://science.sciencemag.org/content/349/6252/1101).
+
+## Installation:
+
+### Pip
+Make sure that "pip" is the PyPi command of your *python2* installation, then:
+
+```bash
+pip install menace
+```
+
+#### Git
+```bash
+git clone git@github.com:zertan/Menace.git
+cd Menace
+python setup.py install
+```
+
+This should install the below *python* dependencies. The other dependencies have to be installed manually (if you have questions about this I suggest you consult your cluster IT help desk).
+
+The software has been tested on the "hebbe" cluster at [C3SE](c3se.chalmers.se) which uses the "slurm" system for resource management (thus slurm is the only queueing system currently supported).
+
+### Dependencies:
+
+```
+Python2:
+numpy
+scipy
+pandas
+biopython
+matplotlib
+xmltodict
+configparser
+lmfit
+newick
+Jinja2
+doric
+-e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope
+
+```
+
+[samtools](http://www.htslib.org/download/)
+
+[bamtools](https://github.com/pezmaster31/bamtools/wiki/Building-and-installing)
+
+[bowtie2](https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.9/)
+
+[Pathoscope 2.0](https://sourceforge.net/projects/pathoscope/files/?source=navbar) (should be installed by the above pip command but make sure 'pathoscope ID' is accessible in the shell, ie. is on the system path)
+
+[parallel](http://www.gnu.org/software/parallel/)
+
+[DoriC](http://tubic.tju.edu.cn/doric/download.php) is a databse of chromosome origin locations (OriCs) which is a (recommended) optional dependency for the pipeline. Please visit the link and enter your e-mail to download.
+
+## Usage
+You can get an overview of the menace functionality by running `menace -h`.
+
+1. Initialize a project in current directory by running `menace init`. Identify a set of NCBI genome reference accession numbers and put them in "./searchStrings" (or use the default one which includes a *minimal* set of references to bacteria common in the human gut).
+
+2. Identify a metagenomic cohort of interest (download manually or add URLs as described below) and add to the Data folder. Supported input: raw/gzipped/bzipped ".fastq" files.
+
+3. Add information to the `project.conf` file.
+
+4. Edit `loadmodules.sh` to include the **python2** module of the cluster (or comment out the lines if python2 is accessible by default). 
+
+5. Run `menace full` (use "nohup {cmd} &" to keep alive after logout if on a cluster login node). 
+
+6. Wait for job to complete. Run `menace collect` in project directory.
+
+#### Notes
+The menace script is a common utility for all parts of the pipeline including downloading of references and metagenomic data, bulding a reference index, setting up the necessary file structure and submitting to slurm. Hence, all configuration is intended to be set up in project.conf (please see `bin/project.conf.example` for an example).
+
+The default 'searchStrings' will most probably not fit your purposes but is only an example. A more comprehensive Reference library will yield higher coverage and more accurate values. A more comprehensive list of human gut bacteria is available at 'extra/referenceACClong.txt'.
+
+## Directory structure (*example*)
+With the above usage example the path structure(s) will look something like below.
+
+```
+$DATA_PATH
+  ├ "Sample01"								       (eg. ERR525688)
+  .  ├ {sample01_1.fastq.gz}
+  .  └ {sample01_2.fastq.gz} 				 paired metagenomic reads
+  .
+
+$REF_PATH
+  ├ Index
+  |  └ {REF_NAME.*.bt2l}					    bowtie2 index files
+  ├ Fasta
+  |  └ {accession.fasta}
+  ├ Headers
+  |  └ {accession.xml}						    xml files containing extra genome references info
+  └  taxIDs.txt
+
+$DORIC_PATH
+  ├ bacteria_record.dat
+  └ bacteria_seq.fas
+
+$OUTPUT_PATH
+  ├ "Sample01"
+  .  ├ depth
+  .  |  └ {accession.depth} 				  coverage files for each reference
+  .  ├ log
+     |  └ {accession.log}					    output logs from piecewiseFit	
+     ├ npy
+     |  └ {accession_OriC_TerC.npy}		numpy files with origin/terminus locations and relative C periods
+     ├ png
+     |  └ {accession_fit.png}  				images of piecewise fit of the smoothed coverage
+     └ accession-sam-report.tsv				Pathoscope2 reassignment report
+```
 
 ## Contents
 Below follows a description of the main scripts in the package.
@@ -38,166 +145,3 @@ This utility can be used to download '.fasta' reference files from the NCBI serv
 **input:** searchStrings.txt, 
 
 **output:** {reference.fasta}, {reference.xml}, taxIDs.txt
-
-## Installation:
-Make sure that "pip" is the PyPi command of your *python2* installation, then:
-
-#### Git
-```bash
-git clone git@github.com:zertan/PTR-pipeline.git
-cd PTR-pipeline
-pip3 install --user requirements3.txt
-pip install --user requirements.txt
-```
-
-This should install the below *python* dependencies. The other dependencies have to be installed manually (if you have questions about this I suggest you consult your cluster IT help desk).
-
-Note that this software uses python3 for tasks executed by the user ("./ptr-pipeline.py") and python2 for tasks running on the cluster.
-
-The software has been tested on the "hebbe" cluster at [C3SE](c3se.chalmers.se) which uses the "slurm" system for resource management (thus slurm is the only queueing system currently supported).
-
-### Dependencies:
-
-```
-Python3:
-python>=3.3
-Biopython
-jinja2
-xmltodict
-pandas
-numpy
-scipy
-
-Python2:
-python>=2.7
-numpy
-scipy
-pandas
-xmltodict
-lmfit
--e git@github.com:PathoScope/PathoScope.git#egg=pathoscope
-```
-
-[samtools](http://www.htslib.org/download/)
-
-[bamtools](https://github.com/pezmaster31/bamtools/wiki/Building-and-installing)
-
-[bowtie2](https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.2.9/)
-
-[Pathoscope 2.0](https://sourceforge.net/projects/pathoscope/files/?source=navbar) (should be installed by the above pip command but make sure 'pathoscope ID' is accessible in the shell, ie. is on the system path)
-
-[parallel](http://www.gnu.org/software/parallel/)
-
-[DoriC](http://tubic.tju.edu.cn/doric/download.php) is a databse of chromosome origin locations (OriCs) which is a (recommended) optional dependency for the pipeline. Please visit the link and enter your e-mail to download.
-
-## Usage
-1. Identify a set of NCBI genome reference accession numbers and put them in "./searchStrings" (or use the default one which includes a *minimal* set of references to bacteria common in the human gut).
-
-2. Identify a metagenomic cohort of interest (download manually or add URLs as described below). Supported input: raw/gzipped/bzipped ".fastq" files.
-
-3. Add information to the `project.conf` file.
-
-4. Edit `bin/loadmodules.sh` to include the **python2** module of the cluster (or comment out the lines if python2 is accessible by default). 
-
-5. Load **python3** in your submit environment. Run `./ptr-pipeline.py full` (use "nohup {cmd} &" to keep alive after logout). 
-
-6. Wait for job to complete. Run `./ptr-pipeline.py collect`.
-
-#### Notes
-The ptr-pipeline.py script is a common utility for all parts of the pipeline including downloading of references and metagenomic data, bulding a reference index, setting up the necessary file structure and submitting to slurm. Hence, all configuration is intended to be set up in project.conf (please see `bin/project.conf.example` for an example).
-
-The default 'searchStrings' will most probably not fit your purposes but is only an example. A more comprehensive Reference library will yield higher coverage and better PTR values. A more comprehensive list of human gut bacteria is available at'extra/referenceACClong.txt'.
-
-Note that `./ptr-pipeline.py` is python3 while the actual pipeline scripts (running on the cluster) are python2. Be sure to install pathoscope for your python2 environment.
-
-## Usage (detailed)
-This is a usage without `ptr-pipeline.py`.
-
-#### 1 Update config.sh and loadmodules.sh
-Most cluster resources load software as modules. Update loadmodules.sh and make sure you have the correct module names for python with numpy and scipy loaded.
-
-#### 2 Download Metagenomic data to your cluster.
-Ex. Download sample ERR525688-ERR525787 of cohort ERR525 using four wget processes.
-
-```bash
-let e="787";let s="688";let n="($e-$s+1)/5-1";
-DATA_PATH="/path/to/store/data"
-COHORT_URL="ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR525"
-seq $s $e | parallel -j 4 wget -r --no-parent -P $DATA_PATH $COHORT_URL/ERR525{}/
-```
-
-#### 3 Download genome references.
-Ex. Use 'fetchSeq.py' to download genome references (specified in referenceACC.txt) as '.fasta' files from NCBI. Use "-t" to also download taxonomy information used in later steps.
-
-```bash
-./fetchSeq.py -e $EMAIL -t True -s extra/referenceACC.txt -d RefSeq
-```
-
-Alternatively download directly from the [ftp site](ftp://ftp.ncbi.nlm.nih.gov/).
-
-#### 4 Build bowtie2 index.
-Before building the index, taxonomoy information must be added to the reference files (this is used by Pathoscope for strain specific read redistribution):
-
-```bash
-while IFS=$'\t' read -r -a arr
-do
-	sed -i "" "s/^>gi/>ti|${arr[1]}|gi/" "${REF_PATH}/Fasta/${arr[0]}.fasta"
-done < ${REF_PATH}/taxIDs.txt
-```
-
-Now build the index:
-```bash
-mkdir ${REF_PATH}/Index
-bowtie2-build --large-index $(ls -1 --color=none ${REF_PATH}/Fasta | tr '\n' ',') ${REF_PATH}/Index/${REF_NAME}
-```
-
-#### 6 Submit jobscript to cluster
-Please note that sbatch *must* be called from within the PTR-Pipeline directory.
-
-```bash
-cd $SCRIPT_PATH
-sbatch --array=0-$n jobscript
-```
-Logs are output to '$SCRIPT_PATH/*.stderr' and '$SCRIPT_PATH/*.stdout'.
-
-#### 7 Collect the output data into dataframes
-
-```bash
-./PTRMatrix.py ${DATA_PATH} ${REF_PATH} ${DORIC_PATH}
-```
-
-## Directory structure (*example*)
-With the above usage example the path structure(s) will look something like below.
-
-```
-$DATA_PATH
-  ├ "Sample01"								       (eg. ERR525688)
-  .  ├ {sample01_1.fastq.gz}
-  .  └ {sample01_2.fastq.gz} 				 paired metagenomic reads
-  .
-
-$REF_PATH
-  ├ Index
-  |  └ {REF_NAME.*.bt2l}					    bowtie2 index files
-  ├ Fasta
-  |  └ {accession.fasta}
-  ├ Headers
-  |  └ {accession.xml}						    xml files containing extra genome references info
-  └  taxIDs.txt
-
-$DORIC_PATH
-  ├ bacteria_record.dat
-  └ bacteria_seq.fas
-
-$OUTPUT_PATH
-  ├ "Sample01"
-  .  ├ depth
-  .  |  └ {accession.depth} 				  coverage files for each reference
-  .  ├ log
-     |  └ {accession.log}					    output logs from piecewiseFit	
-     ├ npy
-     |  └ {accession_OriC_TerC.npy}		numpy files with origin/terminus locations
-     ├ png
-     |  └ {accession_fit.png}  				images of piecewise fit of the smoothed coverage
-     └ accession-sam-report.tsv				Pathoscope2 reassignment report
-```

@@ -8,5 +8,5 @@ configparser
 lmfit
 newick
 Jinja2
-bx-python
+doric
 -e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope
