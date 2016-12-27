@@ -5,13 +5,14 @@
 #SBATCH -N {{ job_nodes}}
 #SBATCH -n {{ cpu_cores }}
 #SBATCH -t {{ estimated_time }}
-#SBATCH -o logs/output.%A_%a.stdout
-#SBATCH -e logs/output.%A_%a.stderr
+#SBATCH -o Logs/output.%A_%a.stdout
+#SBATCH -e Logs/output.%A_%a.stderr
 #SBATCH --mail-type=END
 #SBATCH --mail-user={{ email }}
 
-source $SLURM_SUBMIT_DIR/bin/loadmodules.sh
+#source $SLURM_SUBMIT_DIR/loadmodules.sh
 
+MENACE_PATH={{ menace_path }}
 NODE_PATH={{ node_path }}
 REF_PATH={{ ref_path }}
 DATA_PATH={{ data_path }}
@@ -28,7 +29,6 @@ JOB_RANGE={{ job_range }}
 DATA_PREFIX={{ data_prefix }}
 
 mkdir $NODE_PATH/Data
-mkdir $NODE_PATH/Analysis
 mkdir $NODE_PATH/References
 mkdir $NODE_PATH/References/Index
 mkdir $NODE_PATH/References/Headers
@@ -49,7 +49,7 @@ pdcp $REF_PATH/taxIDs.txt $NODE_PATH/References
 
 pdcp $DORIC_PATH/bacteria_record.dat $NODE_PATH/DoriC
 
-$SLURM_SUBMIT_DIR/bin/mainBuild{{ mapper }}.sh $SLURM_SUBMIT_DIR $REF_NAME $CPU_CORES $NODE_PATH $OUTPUT_PATH
+$MENACE_PATH/bin/mainBuild{{ mapper }}.sh $MENACE_PATH $REF_NAME $CPU_CORES $NODE_PATH $OUTPUT_PATH
 
 rpdcp -r $NODE_PATH/Data $OUTPUT_PATH
 

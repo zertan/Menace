@@ -182,33 +182,63 @@ def create_mount_run(cli,image,mount_dir,cmd,envs):
     cli.wait(ctr,60*60*24*10)
     return cli.logs(ctr)
 
-def local_conf(td,mapper,email,cores):
-      return {
-            'project': 'ptr_simulation',
-            'cluster': '',
-            'job_name': 'ptr_simulation',
-            'job_nodes': '1',
-            'cpu_cores': cores,
-            'estimated_time': '',
+def local_conf(td,mapper,email,cores,menace_dir):
+    return {
+        'project': 'menace_run',
+        'cluster': '',
+        'job_name': 'menace_run',
+        'job_nodes': '1',
+        'cpu_cores': cores,
+        'estimated_time': '',
 
-            'node_path': td,
-            'ref_path': join(td,'References'),
-            'data_path': join(td,'Data'),
-            'output_path': join(td,'Out'),
-            'doric_path': join(td,'DoriC'),
+        'menace_path': menace_dir,
+        'node_path': td,
+        'ref_path': join(td,'References'),
+        'data_path': join(td,'Data'),
+        'output_path': join(td,'Out'),
+        'doric_path': join(td,'DoriC'),
 
-            'mapper': mapper,
-            'ref_name': 'sim',
-            'nr_samples': '1',
-            'samples_per_node': '1',
-            'email': email,
-            'data_prefix': '',
-            'start_ind': '1',
-            'job_range': '1',
+        'mapper': mapper,
+        'ref_name': 'sim',
+        'nr_samples': '1',
+        'samples_per_node': '1',
+        'email': email,
+        'data_prefix': '',
+        'start_ind': '1',
+        'job_range': '1',
 
-            'ftp_url': '',
-            'data_url': ''
-        }
+        'ftp_url': '',
+        'data_url': ''
+    }
+
+def cluster_conf(td,mapper,email,cores,menace_dir):
+    return {
+        'project': '<SLURM PROJECT ID>',
+        'cluster': '',
+        'job_name': 'menace_run',
+        'job_nodes': '1',
+        'cpu_cores': cores,
+        'estimated_time': '04:00:00',
+
+        'menace_path': menace_dir,
+        'node_path': td,
+        'ref_path': join(td,'References'),
+        'data_path': join(td,'Data'),
+        'output_path': join(td,'Out'),
+        'doric_path': join(td,'DoriC'),
+
+        'mapper': mapper,
+        'ref_name': 'sim',
+        'nr_samples': '1',
+        'samples_per_node': '1',
+        'email': email,
+        'data_prefix': '',
+        'start_ind': '1',
+        'job_range': '1',
+
+        'ftp_url': '',
+        'data_url': ''
+    }
 
 def save_config(lconf,conf):
     Config = configparser.ConfigParser()

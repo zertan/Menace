@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-CODE_DIR=$1
+
 #source $CODE_DIR/bin/loadmodules.sh
 
+MENACE_PATH={{ menace_path }}
 NODE_PATH={{ node_path }}
 REF_PATH={{ ref_path }}
 DATA_PATH={{ data_path }}
@@ -38,9 +39,9 @@ DATA_PREFIX={{ data_prefix }}
 
 #pdcp $DORIC_PATH/bacteria_record.dat $NODE_PATH/DoriC
 
-$CODE_DIR/bin/mainBuild{{ mapper }}.sh $CODE_DIR $REF_NAME $CPU_CORES $NODE_PATH $OUTPUT_PATH
+$MENACE_PATH/bin/mainBuild{{ mapper }}.sh $MENACE_PATH $REF_NAME $CPU_CORES $NODE_PATH $OUTPUT_PATH
 
-cd $NODE_PATH
+#cd $NODE_PATH
 
 #mkdir -p $OUTPUT_PATH
 

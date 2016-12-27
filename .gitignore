@@ -3,7 +3,6 @@ nohup.out
 *.stderr
 *.stdout
 collect
-jobscript
 .DS_Store
 
 # Byte-compiled / optimized / DLL files

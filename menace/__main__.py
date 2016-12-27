@@ -21,7 +21,7 @@ from platform import system
 from jinja2 import Environment, FileSystemLoader
 from shutil import copy
 
-from lib.Community import local_conf
+from lib.Community import local_conf, cluster_conf
 
 CWD = os.getcwd()
 CODE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -112,10 +112,10 @@ def get_parser():
     #parser_c.add_argument("--opt8", action='store_true')
 
     parser_i = subparsers.add_parser('init', help='init an empty project in current directory')
-    parser_i.add_argument("-l", action='store_true',help='Generate a minimal local config.')
-    parser_i.add_argument("-c", action='store_true',help='Generate a minimal cluster config.')
+    parser_i.add_argument("-t", dest='run_type',help='Type of project, "local" or "cluster".',default='local')
 
     parser_t = subparsers.add_parser('test', help='generate a test project and run it on a small example data set in current directory')
+    #parser_t.add_argument("-t", dest='run_type',help='Type of test, "local" or "cluster".',default='local')
 
     parser_n = subparsers.add_parser('notebook', help='open a jupyter notebook of the project in the current directory with data import and analysis examples (requires jupyter)')
 
@@ -220,6 +220,7 @@ def compile_config(args,config):
         'cpu_cores': config['Project']['CpuCores'],
         'estimated_time': config['Project']['EstimatedTime'],
 
+        'menace_path': config['Directories']['Menace'],
         'node_path': config['Directories']['Node'],
         'ref_path': config['Directories']['References'],
         'data_path': config['Directories']['Data'],
@@ -270,6 +271,7 @@ def render_conf(template,config,path,name):
                 cpu_cores=config['cpu_cores'],
                 estimated_time=config['estimated_time'],
                 
+                menace_path=config['menace_path'],
                 node_path=config['node_path'],
                 ref_path=config['ref_path'],
                 data_path=config['data_path'],
@@ -374,7 +376,7 @@ def generate_sbatch_command(config):
 
 def generate_local_command(config):
     """Generate command for performing a local run."""
-    cmd = os.path.join(CWD,'jobscript '+ CODE_DIR)
+    cmd = os.path.join(CWD,'jobscript')
     return cmd
 
 def generate_collect_command(config,args):
@@ -383,25 +385,34 @@ def generate_collect_command(config,args):
     return cmd.format(**config)
 
 def generate_notebook_command(args,config):
-    copy(os.path.join(CODE_DIR,'extra','menace_run.ipynb'),CWD)
-    cmd="jupyter notebook menace_run.ipynb &"
+    copy(os.path.join(CODE_DIR,'extra','Menace.ipynb'),CWD)
+    cmd="jupyter notebook Menace.ipynb &"
     return cmd.format(**config)
 
+# def run_test_command(args):
+#     conf = local_conf(CWD,'bowtie2','','1',CODE_DIR)
+#     if args.email:
+#         conf['email']=args.email
+#     make_dirs(conf)
+#     copy(os.path.join(CODE_DIR,'test','comm00_1.fastq'),os.path.join(CWD,'Data'))
+#     copy(os.path.join(CODE_DIR,'test','comm00_2.fastq'),os.path.join(CWD,'Data'))
+#     copy(os.path.join(CODE_DIR,'test','searchStrings'),CWD)
+#     save_config(conf)
+#     return conf
+
 def run_test_command(args):
-    conf = local_conf(CWD,'bowtie2','','1')
-    if args.email:
-        conf['email']=args.email
-    make_dirs(conf)
     copy(os.path.join(CODE_DIR,'test','comm00_1.fastq'),os.path.join(CWD,'Data'))
     copy(os.path.join(CODE_DIR,'test','comm00_2.fastq'),os.path.join(CWD,'Data'))
-    copy(os.path.join(CODE_DIR,'test','searchStrings'),CWD)
-    save_config(conf)
-    return conf
 
 def run_init_command(args):
-    config=local_conf(CWD,'bowtie2','','1')
+    if args.run_type=='local':
+        config=local_conf(CWD,'bowtie2','','1',CODE_DIR)
+    else:
+        config=cluster_conf(CWD,'bowtie2','','1',CODE_DIR)
+
     if args.email:
         config['email']=args.email
+    
     copy(os.path.join(CODE_DIR,'test', 'searchStrings'),CWD)
     make_dirs(config)
     save_config(config)
@@ -465,7 +476,9 @@ def main2(args,config):
             execute(generate_fetch_seq_command(args,config))
 
     if(args.subparser_name=='test'):
-        config=run_test_command(args)
+        args.run_type='local'
+        config=run_init_command(args)
+        run_test_command(args)
         
         #streamdata = process.communicate()[0]
         #if(process.returncode==0):
