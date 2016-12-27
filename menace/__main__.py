@@ -211,7 +211,7 @@ def compile_config(args,config):
     else:
         start_ind=config['Other']['StartInd']
     
-    job_range = ceil(float(config['Other']['NrSamples'])/float(config['Other']['SamplesPerNode']))-1
+    job_range = int(ceil(float(config['Other']['NrSamples'])/float(config['Other']['SamplesPerNode']))-1)
     conf={
         'project': config['Project']['ProjectID'],
         'cluster': config['Project']['Cluster'],
@@ -371,7 +371,7 @@ def generate_fetch_ref_command(args,config):
 
 def generate_sbatch_command(config):
     """Generate command for scheduling all sample runs."""
-    cmd = "sbatch --array=0-{0}" + os.path.join(CWD,"jobscript")
+    cmd = "sbatch --array=0-{0} jobscript"
     return cmd.format(config['job_range'])
 
 def generate_local_command(config):
