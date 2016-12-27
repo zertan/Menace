@@ -84,8 +84,9 @@ def get_parser():
     parser_feSeq = subparsers.add_parser('fetch-data', help='download metagenomic sequences (using FTP)')
     parser_feSeq.add_argument("-t", dest='feSeq_threads', help='The number of simultaneous wget processes to use.',default=1)
 
-    parser_fe = subparsers.add_parser('fetch-references', help='download references from NCBI')
-    parser_fe.add_argument("-s", dest='fe_srch_file', help='A file with search strings to download.',default='./searchStrings')
+    parser_fe = subparsers.add_parser('fetch-refs', help='download references from NCBI')
+    parser_fe.add_argument("-s", metavar="SEARCH_FILE",dest='fe_srch_file', help='A file with search strings to download.',default='./searchStrings')
+    parser_fe.add_argument("-l", metavar="N",dest="search_limit",type=int,default=1000,help="Limit the number of matches to be downloaded for each search term in searchStrings.")
 
     parser_b = subparsers.add_parser('build-index', help='build a mapping index')
     parser_b.add_argument("-t", dest='b_threads', help='The number of cpu threads to use.',default=1)
@@ -366,7 +367,8 @@ def generate_fetch_seq_command(args,config):
 def generate_fetch_ref_command(args,config):
     """Generate command for downloading reference fastas and headers."""
     #dir_path = os.path.dirname(os.path.realpath(__file__))
-    cmd = "fetch_seq -e {email} -t True -d {ref_path} -s " + args.fe_srch_file
+
+    cmd = "fetch_seq -e {email} -t True -d {ref_path} -s " + args.fe_srch_file + " -l " + str(args.search_limit)
     return cmd.format(**config)
 
 def generate_sbatch_command(config):
@@ -487,7 +489,7 @@ def main2(args,config):
         args.b_threads='1'
         #args.
 
-    if(args.subparser_name=='full' or args.subparser_name=='fetch-references'):
+    if(args.subparser_name=='full' or args.subparser_name=='fetch-refs'):
         #print(os.path.join(CWD,'searchStrings'))
         #ans='run'
         #if (is_non_zero_file(os.path.join(CWD,'searchStrings'))):

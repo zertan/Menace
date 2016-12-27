@@ -34,7 +34,7 @@ def search_entrez(inputString,args):
 				extra='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'
 				org_string=True
 
-			searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra,retmax=1000)
+			searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra,retmax=args.search_limit)
 			record = Entrez.read(searchHandle)
 			try:
 				if(extra=='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'):
@@ -133,6 +133,7 @@ def main():
 	parser.add_argument("-e", metavar="adress", dest="email", default=environ.get('EMAIL', ""), help="Specify an email adress to use with Entrez. If not specified the environment variable EMAIL is used.")
 	parser.add_argument("-m", metavar="N", dest="fetchNr",type=int, default=100, help="Max number of sequences to fetch into memory.")
 	parser.add_argument("-t", metavar="bool",dest="taxBool",type=bool,default=False,help="Download taxonomy information.")
+	parser.add_argument("-l", metavar="N",dest="search_limit",type=int,default=1000,help="Limit the number of matches to be downloaded for each search term in searchStrings.")
 	args = parser.parse_args()
 
 	# create directories
@@ -180,7 +181,7 @@ def main():
 						extra='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'
 						org_string=True
 
-					searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra,retmax=1000)
+					searchHandle = Entrez.esearch(db="nucleotide",term=searchStr2+extra,retmax=args.search_limit)
 					record = Entrez.read(searchHandle)
 					try:
 						if(extra=='[PORG] AND "complete genome"[title] AND srcdb_refseq_known[PROP] NOT plasmid[title]'):
