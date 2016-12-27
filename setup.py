@@ -102,6 +102,7 @@ setup(
         'menace.templates': ['jobscript','jobscript_local','project.conf'],
         'menace.bin': ['interp.pl','mainBuildbowtie2.sh','buildHelper.sh','mainBuildgem.sh','changeTID.sh'],
         'menace.extra': ['accLoc.csv','menace_run.ipynb'],
+		'menace.extra.notebook': ['PTR.csv','Abundance.csv'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may

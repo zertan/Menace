@@ -117,7 +117,7 @@ def get_parser():
 
     parser_t = subparsers.add_parser('test', help='generate a test project and run it on a small example data set in current directory')
 
-    #parser_n = subparsers.add_parser('notebook', help='open a jupyter notebook of the project in the current directory with data import and analysis examples (requires jupyter)')
+    parser_n = subparsers.add_parser('notebook', help='open a jupyter notebook of the project in the current directory with data import and analysis examples (requires jupyter)')
 
     return parser
 
@@ -369,7 +369,7 @@ def generate_fetch_ref_command(args,config):
 
 def generate_sbatch_command(config):
     """Generate command for scheduling all sample runs."""
-    cmd = "sbatch --array=0-{0} jobscript"
+    cmd = "sbatch --array=0-{0}" + os.path.join(CWD,"jobscript")
     return cmd.format(config['job_range'])
 
 def generate_local_command(config):
@@ -443,8 +443,9 @@ def main2(args,config):
         exit()
     
     if(args.subparser_name=='notebook'):
-        if (not exists(join(CWD,'project.conf'))):
-            run_init_command(args)
+        if (not os.path.exists(os.path.join(CWD,'project.conf'))):
+            print "exists"
+            #run_init_command(args)
         process = Popen(generate_notebook_command(args,config), shell=True)
         exit()
 

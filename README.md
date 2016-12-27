@@ -3,7 +3,7 @@ This bundle of software is a basic implementation of the algorithm for extractin
 
 ## Installation:
 
-### Pip
+#### Pip
 Make sure that "pip" is the PyPi command of your *python2* installation, then:
 
 ```bash

@@ -72,7 +72,7 @@ if(len(sys.argv) == 6):
 #oTable=pd.DataFrame(columns=[ f for f in listdir(sys.argv[1]) if isdir(join(sys.argv[1],f)) ])
 oTable=pd.DataFrame()
 tTable=pd.DataFrame()
-ptrTable=pd.DataFrame()
+cTable=pd.DataFrame()
 headerTable=pd.DataFrame()
 covTable=pd.DataFrame()
 #headerTable.colums=['ACC','Name','PTR','OriC','TerC','Length']
@@ -172,8 +172,9 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
             
 			oTable.loc[ACC,folderName]=vec[0]
 			tTable.loc[ACC,folderName]=vec[1]
+			cTable.loc[ACC,folderName]=vec[2]/float(vec[3])	
 
-print(oTable.values)
+#########print(oTable.values)
 
 
 lenVec=headerTable['Length'].values
@@ -251,7 +252,7 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 				dataVec=np.power(2,np.load(join(sys.argv[1],dirpath,fn)))
 			except IOError as e:
 				print("I/O error({0}): {1}".format(e.errno, e.strerror))
-				cont=False	
+				cont=False
 			try:
 				tmp=headerTable.loc[ACC,'TerC']
 			except:
@@ -333,6 +334,7 @@ headerTable.to_csv(join(out_path,'Header.csv'),sep=";")
 ptrTable.to_csv(join(out_path,'PTR.csv'),sep=";",index=False)
 tauTable.to_csv(join(out_path,'DoublingTime.csv'),sep=";",index=False)
 abundanceTable.to_csv(join(out_path,'Abundance.csv'),sep=";",index=False)
+cTable.to_csv(join(out_path,'C.csv'),sep=";",index=False)
 
 print(" ".join(["\nOutput stored in"]+[join(sys.argv[4],'Collect')]))
 #plt.plot(y, 'r-')

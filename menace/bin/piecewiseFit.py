@@ -445,6 +445,8 @@ plt.clf()
 plt.plot(y1,'b')
 plt.savefig("".join([sys.argv[1],"blak"])+".png")
 
+#y1=y1/np.sum(y1)
+#genLen=1
 
 print(sys.argv[1]+": Coverage OK ("+str(coveragePercentage)+" x).")
 x1=np.linspace(0,genomeLen-1,len(y1))
@@ -508,6 +510,12 @@ if(bestVal['Tc']>bestVal['Oc']):
 	bestVal['Tl']=tmpT
 	#bestVal['Tl'],bestVal['Ol'] = bestVal['Ol'],bestVal['Tl']
 
+
+
+#C=(bestVal['Tc']-bestVal['Oc'])/(2*(bestVal['Tl']-bestVal['Ol']))
+
+#print C
+
 PTR=2**bestVal['Oc']/2**bestVal['Tc']
 
 if(PTR<1.1):
@@ -516,7 +524,7 @@ if(PTR<1.1):
 
 #### p-value test
 counter=0
-nIter=2000
+nIter=1000
 cCoeff=np.power(np.corrcoef(result.best_fit,y1),2)
 for i in range(1,nIter):
 	y1Tmp=np.random.permutation(y1)

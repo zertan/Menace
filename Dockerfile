@@ -6,11 +6,11 @@ RUN apk --update  --repository http://dl-4.alpinelinux.org/alpine/edge/community
     nano \
     bash \
     git \
-	  gcc \
-	  musl-dev \
-	  zlib \
+	gcc \
+	musl-dev \
+	zlib \
     zlib-dev \
-	  linux-headers \
+	linux-headers \
     parallel \
     openssh-client \
     curl \
