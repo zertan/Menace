@@ -57,7 +57,7 @@ def search_entrez(inputString,args):
 		exit()
 		#inputString=files
 
-	print(("Found "+repr(matchNr)+" matche(s). Downloading to "+repr(args.dataPath)+"."))
+	print(("Found "+repr(matchNr)+" matche(s). Downloading subset to "+repr(args.dataPath)+"."))
 
 	# delete non found items from inputString
 	errorString = [i for j, i in enumerate(inputString) if j in errIndex]
@@ -204,7 +204,7 @@ def main():
 				#exit()
 				#inputString=files
 
-				print(("Found "+repr(matchNr)+" matche(s). Downloading to "+repr(args.dataPath)+"."))
+				print(("Found "+repr(matchNr)+" matche(s). Downloading subset to "+repr(args.dataPath)+"."))
 
 				# delete non found items from inputString
 				errorString = [i for j, i in enumerate(inputString) if j in errIndex]

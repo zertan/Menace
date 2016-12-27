@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from collections import namedtuple
-from os.path import join, exists
-from os import makedirs#, chdir,getcwd,fchmod
+from os.path import join, exists, abspath,dirname
+from os import makedirs,getcwd#, chdir,getcwd,fchmod
 from glob import glob
 import shutil
 import numpy as np
@@ -25,15 +25,22 @@ import docker
 import configparser
 
 # vars
-#cli = docker.Client(base_url='unix://var/run/docker.sock')
+cli = docker.APIClient(base_url='unix://var/run/docker.sock')
+#cli = docker.from_env()
+CWD = getcwd()
+CODE_DIR = dirname(dirname(abspath(__file__)))
+MENACE_DOCKER_PATH='/home/Programs/PTR-Pipeline/menace'
+#MENACE_DOCKER_PATH='/opt/var/menace/menace'
 
-class Community:
+
+class Community2:
     "A community defined by genome references (Biopython SeqRecords) and corresponding growth parameters."
     def __init__(self,name,acc,growth_param,td,mapper,image,env,email):
         self.name = name
-        self.conf = local_conf(join(td,name),mapper,email)
-        self.d_conf = local_conf(join('/mnt/vol',name),mapper,email)
-        self.args0=['ptr_pipeline.py','-c',join(self.d_conf['node_path'],'project.conf')]
+        self.td = td
+        self.conf = local_conf(join(td,name),mapper,email,"4",CODE_DIR)
+        self.d_conf = local_conf(join('/mnt/vol',name),mapper,email,"4",MENACE_DOCKER_PATH)
+        self.args0=['menace','-c',join(self.d_conf['node_path'],'project.conf')]
         self.env=env
         self.image=image
         
@@ -136,16 +143,16 @@ class Community:
             f.write("\n".join(acc))
         f.close()
         
-        create_mount_run(self.image,td,self.args0+['fetch-references','-s',join(self.d_conf['node_path'],'acc')],self.env)
+        create_mount_run(self.image,self.td,self.args0+['fetch-refs','-s',join(self.d_conf['node_path'],'acc')],self.env)
 
     def build_index(self):
-        create_mount_run(self.image,td,self.args0+['build-index'],self.env)
+        create_mount_run(self.image,self.td,self.args0+['build-index'],self.env)
 
     def run_pipeline(self):
-        create_mount_run(self.image,td," ".join(['/bin/bash -c "']+self.args0+['make']+[';']+self.args0+['run"']),self.env)
+        create_mount_run(self.image,self.td," ".join(['/bin/bash -c "']+self.args0+['make']+[';']+self.args0+['run"']),self.env)
         
     def collect(self):
-        create_mount_run(self.image,td,self.args0+['collect'],self.env)
+        create_mount_run(self.image,self.td,self.args0+['collect'],self.env)
         
     def create_dirs(self,from_init=False):
         if exists(self.conf['node_path']) and from_init:
@@ -155,7 +162,7 @@ class Community:
             if not exists(d):
                 makedirs(d)
 
-def create_mount_run(cli,image,mount_dir,cmd,envs):
+def create_mount_run(image,mount_dir,cmd,envs):
     if envs:    
         container = cli.create_container(
             image=image, command=cmd, volumes=['/mnt/vol'],
@@ -397,3 +404,77 @@ def mv_filt(L,omega):
 
 def Asnok(R,C,D,l):
     return R/(Gekv(C,D) * l)
+
+def compare_fit(c):
+    err_hfit=[]
+    err_pfit=[]
+    res_fit=[]
+    
+    header=['C','Error','ACC','Coverage','Method','Sample']
+    df=pd.DataFrame([],columns=header)
+    
+    #ab=pd.read_csv(join(c.conf['output_path'],'Collect','Abundance.csv'),sep=';')
+    
+    for i,samp in enumerate(c.samples):
+        #ab_t=ab[c.name+str(i)]
+        res_fit_tmp=[]
+        err_hfit_tmp=[]
+        err_pfit_tmp=[]
+        
+        for acc in c.pop.keys():
+            try:
+                depth_file=join(c.conf['output_path'],c.name+str(i),'npy',acc+'.depth.npy')
+                best_file=join(c.conf['output_path'],c.name+str(i),'npy',acc+'.depth.best.npy')
+
+                signal=2**(np.load(depth_file))
+                signal=signal/(signal.sum()/len(signal))#*self.pop[acc].l)
+                
+                # extra deblurring
+                signal=smooth_signal(signal,10**3)
+                signal=sharpen_filter(signal)
+                
+                from_ptr=np.load(best_file)
+
+                res=fit_signal(signal,c.pop[acc].l)
+                #res_fit_tmp.append(res.best_values['C'])
+
+                err_hfit_tmp=np.abs(c.pop[acc].C-res.best_values['C'])/c.pop[acc].C
+                df=df.append(pd.DataFrame([[res.best_values['C'],err_hfit_tmp,acc,c.samples[0][i].size/float(c.pop[acc].l),'H',i]],columns=header),ignore_index=True)
+                #err_pfit_tmp.append((c.pop[acc].C-from_ptr[2]+from_ptr[3])/c.pop[acc].C)
+                #print "Simulated value: "+str(c.pop[acc].C)
+                #print "Error from this fit: "+str(err_hfit_tmp[-1])+ ' value: ' + str(res.best_values['C'])
+                #print "Error from initial PTR fit "+str(err_pfit_tmp[-1])+' value: ' + str(from_ptr[2]-from_ptr[3])
+            except Exception as Ex:
+                print Ex
+                pass
+        
+        #res_fit.append(res_fit_tmp)
+        #err_hfit.append(err_hfit_tmp)
+        #err_pfit.append(err_pfit_tmp)
+    return df#[res_fit,np.abs(err_hfit),np.abs(err_pfit)]
+
+def compare_fit_ptrc(c):
+    #ptrc=[]
+    #ptre=[]
+    
+    header=['C','Error','ACC','Coverage','Method','Sample']
+    df=pd.DataFrame([],columns=header)
+    
+    for i,samp in enumerate(c.samples):
+        ptrc_tmp=[]
+        ptre_tmp=[]
+        cmd=['/bin/bash -c "']+['cd /mnt/vol ; /home/Programs/PTR-Pipeline/extra/ptrc_commands.sh']+[c.name+str(i)+'_1.fastq']+[c.name+str(i)+'_2.fastq"']
+        create_mount_run('centos/hedani',c.td," ".join(cmd),envs)
+        ptr_file=join(c.conf['output_path'],'ptrc_out')
+        ptrc_frame=pd.read_pickle(ptr_file)
+        ind_val=ptrc_frame.index.values
+        for ind in ind_val:#range(ptrc_frame.shape[0]):
+            ptrc_tmp=ptrc_frame.loc[ind]['sm']#.ix[i]['sm'])
+            ptre_tmp=np.abs(np.log2(ptrc_frame.loc[ind]['sm'])-c.pop[ind[:-1]].C)/c.pop[ind[:-1]].C
+            df=df.append(pd.DataFrame([[np.log2(ptrc_tmp),ptre_tmp,ind[:-1],c.samples[0][i].size/float(c.pop[ind[:-1]].l),'K',i]],columns=header),ignore_index=True)
+            
+        #ptrc.append(ptrc_tmp)
+        #ptre.append(ptre_tmp)
+       
+    return df
+

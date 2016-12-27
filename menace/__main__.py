@@ -487,6 +487,7 @@ def main2(args,config):
         args.subparser_name='full'
         args.fe_srch_file='searchStrings'
         args.b_threads='1'
+        args.search_limit='1'
         #args.
 
     if(args.subparser_name=='full' or args.subparser_name=='fetch-refs'):
