@@ -424,7 +424,7 @@ def make_dirs(conf):
         if not os.path.exists(conf[k]):
             os.makedirs(conf[k])
 
-    ref_sub=['Fasta','Headers','Index']
+    ref_sub=['Fasta','Headers','Index','Logs']
     rp=conf['ref_path']
     for d in ref_sub:
         if not os.path.exists(os.path.join(rp,d)):
@@ -533,7 +533,7 @@ def main2(args,config):
             process.wait()
         else:
             process = Popen(generate_sbatch_command(config), shell=True)
-            process.wait()
+            #process.wait()
 
     if(args.subparser_name=='collect'):
         process = Popen(generate_collect_command(config,args), shell=True)
