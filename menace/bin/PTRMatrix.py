@@ -119,14 +119,14 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 			print(folderName)
 			tmpTable=pd.read_csv(join(sys.argv[1],dirpath,fn),delimiter='	',skiprows=1,index_col=0,usecols=[0, 1])
 			
-			for ti in tmpTable.index.values:
+			for acc in tmpTable.index.values:
 				
 				try:
-					tmp_ti=re.match(r".*\|([0-9]+)\|.*",ti)
-					tmp_ti=tmp_ti.group(1)
+					#tmp_ti=re.match(r".*\|([0-9]+)\|.*",ti)
+					#tmp_ti=tmp_ti.group(1)
 					#print(bacteriaName[ti[3:]])
-					abundanceTable.loc[tmp_ti,'Name']=bacteriaName[tmp_ti]
-					abundanceTable.loc[tmp_ti,folderName]=float(tmpTable.loc[ti])
+					abundanceTable.loc[acc,'Name']=bacNameAcc[acc]
+					abundanceTable.loc[acc,folderName]=float(tmpTable.loc[acc])
 				except KeyError as e:
 					print('IndexError - "%s"' % str(e))
 					
@@ -250,6 +250,7 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 			ACC=fn[:-10]
 			try:
 				dataVec=np.power(2,np.load(join(sys.argv[1],dirpath,fn)))
+				bestValues=np.load(join(sys.argv[1],dirpath,ACC+'.depth.best.npy'))
 			except IOError as e:
 				print("I/O error({0}): {1}".format(e.errno, e.strerror))
 				cont=False
@@ -268,7 +269,10 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 				#print(folderName)
 				#print(np.round(OriC/Glen*dataVec.shape[0]))
 				#print(np.round(TerC/Glen*dataVec.shape[0]))
-				PTR=dataVec[np.floor((OriC/Glen)*dataVec.shape[0])]/dataVec[np.floor((TerC/Glen)*dataVec.shape[0])]
+				#PTR=dataVec[np.floor((OriC/Glen)*dataVec.shape[0])]/dataVec[np.floor((TerC/Glen)*dataVec.shape[0])]
+
+				PTR=2**bestValues[2]/2**bestValues[3]
+
 				ptrTable.loc[ACC,'Name']=headerTable.loc[ACC,'Species Name']
 				ptrTable.loc[ACC,folderName]=PTR
 				tauTable.loc[ACC,'Name']=headerTable.loc[ACC,'Species Name']
