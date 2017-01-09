@@ -8,5 +8,7 @@ configparser
 lmfit
 newick
 Jinja2
-doric
+jupyter
+seaborn
+sklearn
 -e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope
