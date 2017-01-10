@@ -25,11 +25,11 @@ import docker
 import configparser
 
 # vars
-cli = docker.APIClient(base_url='unix://var/run/docker.sock')
+#cli = docker.APIClient(base_url='unix://var/run/docker.sock')
 #cli = docker.from_env()
 CWD = getcwd()
 CODE_DIR = dirname(dirname(abspath(__file__)))
-MENACE_DOCKER_PATH='/home/Programs/PTR-Pipeline/menace'
+#MENACE_DOCKER_PATH='/home/Programs/PTR-Pipeline/menace'
 #MENACE_DOCKER_PATH='/opt/var/menace/menace'
 
 
