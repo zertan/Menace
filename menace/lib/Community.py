@@ -21,7 +21,7 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 #from Bio.Seq import MutableSeq
 #from Bio.Alphabet import IUPAC
-import docker
+#import docker
 import configparser
 
 # vars
