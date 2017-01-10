@@ -81,7 +81,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     #setup_requires=[],
-    install_requires=["numpy","scipy","pandas","biopython","matplotlib","xmltodict","configparser","lmfit","newick","Jinja2","docker"],
+    install_requires=["numpy","scipy","pandas","biopython","matplotlib","xmltodict","configparser","lmfit","Jinja2","jupyter","sklearn","seaborn"],
  #11 bx-python
  #-e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope],
     dependency_links = ['https://github.com/PathoScope/PathoScope/tarball'],
