@@ -11,4 +11,4 @@ Jinja2
 jupyter
 seaborn
 sklearn
--e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope
+#-e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope

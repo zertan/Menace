@@ -205,6 +205,7 @@ def local_conf(td,mapper,email,cores,menace_dir):
         'output_path': join(td,'Out'),
         'doric_path': join(td,'DoriC'),
 
+        'conda_env': 'menace',
         'mapper': mapper,
         'ref_name': 'sim',
         'nr_samples': '1',
@@ -234,6 +235,7 @@ def cluster_conf(td,mapper,email,cores,menace_dir):
         'output_path': join(td,'Out'),
         'doric_path': join(td,'DoriC'),
 
+        'conda_env': 'menace',
         'mapper': mapper,
         'ref_name': 'sim',
         'nr_samples': '1',
@@ -269,6 +271,7 @@ def save_config(lconf,conf):
     Config.set('Directories','DoriC',conf['doric_path'])
     
     Config.add_section('Other')
+    Config.set('Other','CondaEnv',conf['conda_env'])
     Config.set('Other','Mapper',conf['mapper'])
     Config.set('Other','RefName',conf['ref_name'])
     Config.set('Other','NrSamples',conf['nr_samples'])

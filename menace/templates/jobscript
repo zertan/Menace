@@ -10,7 +10,7 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-user={{ email }}
 
-#source $SLURM_SUBMIT_DIR/loadmodules.sh
+source activate {{ conda_env }}
 
 MENACE_PATH={{ menace_path }}
 NODE_PATH={{ node_path }}

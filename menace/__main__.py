@@ -228,6 +228,7 @@ def compile_config(args,config):
         'output_path': config['Directories']['Output'],
         'doric_path': config['Directories']['DoriC'],
 
+        'conda_env': config['Other']['CondaEnv'],
         'mapper': config['Other']['Mapper'],
         'ref_name': config['Other']['RefName'],
         'nr_samples': config['Other']['NrSamples'],
@@ -279,6 +280,7 @@ def render_conf(template,config,path,name):
                 output_path=config['output_path'],
                 doric_path=config['doric_path'],
 
+                conda_env=config['conda_env'],
                 mapper=config['mapper'],
                 ref_name=config['ref_name'],
                 nr_samples=config['nr_samples'],
@@ -387,7 +389,7 @@ def generate_collect_command(config,args):
     return cmd.format(**config)
 
 def generate_notebook_command(args,config):
-    copy(os.path.join(CODE_DIR,'extra','Menace.ipynb'),CWD)
+    copy(os.path.join(CODE_DIR,'notebook','Menace.ipynb'),CWD)
     cmd="jupyter notebook Menace.ipynb &"
     return cmd.format(**config)
 

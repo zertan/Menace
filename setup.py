@@ -84,7 +84,7 @@ setup(
     install_requires=["numpy","scipy","pandas","biopython","matplotlib","xmltodict","configparser","lmfit","Jinja2","jupyter","sklearn","seaborn"],
  #11 bx-python
  #-e git+https://github.com/PathoScope/PathoScope.git#egg=pathoscope],
-    dependency_links = ['https://github.com/PathoScope/PathoScope/tarball'],
+    #dependency_links = ['https://github.com/PathoScope/PathoScope/tarball'],
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
@@ -101,8 +101,8 @@ setup(
         'menace.test': ['comm00_1.fastq','comm00_2.fastq','searchStrings'],
         'menace.templates': ['jobscript','jobscript_local','project.conf'],
         'menace.bin': ['interp.pl','mainBuildbowtie2.sh','buildHelper.sh','mainBuildgem.sh','changeTID.sh'],
-        'menace.extra': ['accLoc.csv','menace_run.ipynb'],
-		'menace.extra.notebook': ['PTR.csv','Abundance.csv'],
+        'menace.extra': ['accLoc.csv'],
+		'menace.extra.notebook': ['C.csv','Abundance.csv','Menace.ipynb'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
