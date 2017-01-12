@@ -94,12 +94,12 @@ rm -f *.bam
 
 find . -size -100 -type f -name \*.depth
 
-#echo "Selecting representative strains"
-#acs=( `awk '{print $1}' $REFPATH/taxIDs.txt` )
-#tis=( `awk '{print $2}' $REFPATH/taxIDs.txt | uniq` )
-#reps=( `parallel rep_sel {} $REFPATH ::: ${tis[@]}` )
-#remove=(`echo ${acs[@]} ${reps[@]} | tr ' ' '\n' | sort | uniq -u `)
-#parallel rm -f {}.depth ::: ${remove[@]}
+echo "Selecting representative strains"
+acs=( `awk '{print $1}' $REFPATH/taxIDs.txt` )
+tis=( `awk '{print $2}' $REFPATH/taxIDs.txt | uniq` )
+reps=( `parallel rep_sel {} $REFPATH ::: ${tis[@]}` )
+remove=(`echo ${acs[@]} ${reps[@]} | tr ' ' '\n' | sort | uniq -u `)
+parallel rm -f {}.depth ::: ${remove[@]}
 
 echo "$FILE: Performing piecewise fits"
 parallel python $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.depth

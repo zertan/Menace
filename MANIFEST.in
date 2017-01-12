@@ -2,5 +2,6 @@ recursive-include menace/test *
 recursive-include menace/templates *
 recursive-include menace/extra *
 recursive-include menace/bin *
+recursive-include menace/notebook *
 include README.md
-include LICENSE.txt
+include LICENSE

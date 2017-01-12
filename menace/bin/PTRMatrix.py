@@ -24,6 +24,8 @@ import csv
 from numpy.matlib import repmat
 import re
 
+from lib.Community import Asnok
+
 #import pickle
 
 def circularMedian(p,g):

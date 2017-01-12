@@ -34,7 +34,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://www.github.com/SysBio/menace/',
+    url='https://www.github.com/SysBioChalmers/Menace/',
 
     # Author details
     author='Daniel Hermansson',
@@ -102,7 +102,7 @@ setup(
         'menace.templates': ['jobscript','jobscript_local','project.conf'],
         'menace.bin': ['interp.pl','mainBuildbowtie2.sh','buildHelper.sh','mainBuildgem.sh','changeTID.sh'],
         'menace.extra': ['accLoc.csv'],
-		'menace.extra.notebook': ['C.csv','Abundance.csv','Menace.ipynb'],
+		'menace.notebook': ['C.csv','Abundance.csv','Menace.ipynb'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
