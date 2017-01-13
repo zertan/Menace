@@ -34,7 +34,7 @@ install:
   # Replace dep1 dep2 ... with your dependencies
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
-  - conda build menace
+  - conda build recipe/menace
   - conda install menace --use-local
 
 script:
