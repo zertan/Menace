@@ -19,7 +19,7 @@ do
 			#sed -i "1s/.*/${LINE}/" "$1/Fasta/${arr[0]}.fasta"
 		fi
 	elif [[ $(uname) == 'Darwin' ]]; then
-		if [[ ! "$LINE" =~ ^\>ti|.* ]]; then
+		if [[ ! "$LINE" =~ "^\>ti|.*" ]]; then
 			sed -i "" "s/^>/>ti|${arr[1]}|gi|/" "$1/Fasta/${arr[0]}.fasta"
 		fi
 	fi

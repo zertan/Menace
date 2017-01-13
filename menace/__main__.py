@@ -389,7 +389,9 @@ def generate_collect_command(config,args):
     return cmd.format(**config)
 
 def generate_notebook_command(args,config):
-    copy(os.path.join(CODE_DIR,'notebook','Menace.ipynb'),CWD)
+    if not os.path.exists(os.path.join(CWD,'Menace.ipynb')):
+        copy(os.path.join(CODE_DIR,'notebook','Menace.ipynb'),CWD)
+    
     cmd="jupyter notebook Menace.ipynb &"
     return cmd.format(**config)
 

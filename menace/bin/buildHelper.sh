@@ -19,7 +19,7 @@ function rep_sel {
  	i=0
 	i_max=0
 	for ac in ${acs[@]}; do
-		echo $ac
+		#echo $ac
 		if [ -a $ac.depth ]; then
 			tmp=`perl -nle '$s += $_; END { print $s }' $ac.depth`
 			len=( `wc -l $ac.depth` )
@@ -98,8 +98,11 @@ echo "Selecting representative strains"
 acs=( `awk '{print $1}' $REFPATH/taxIDs.txt` )
 tis=( `awk '{print $2}' $REFPATH/taxIDs.txt | uniq` )
 reps=( `parallel rep_sel {} $REFPATH ::: ${tis[@]}` )
-remove=(`echo ${acs[@]} ${reps[@]} | tr ' ' '\n' | sort | uniq -u `)
-parallel rm -f {}.depth ::: ${remove[@]}
+
+if [ ! ${#reps[@]} -eq 0 ]; then
+	remove=(`echo ${acs[@]} ${reps[@]} | tr ' ' '\n' | sort | uniq -u `)
+	parallel rm -f {}.depth ::: ${remove[@]}
+fi
 
 echo "$FILE: Performing piecewise fits"
 parallel python $SCRIPTPATH/bin/piecewiseFit.py {} $REFPATH/Headers/ $DORICPATH/ ::: *.depth

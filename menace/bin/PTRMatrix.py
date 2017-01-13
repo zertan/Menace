@@ -18,13 +18,14 @@ from os.path import join
 
 #onlyfiles = [ f for f in listdir(sys.argv[1]) if isfile(join(mypath,f)) ]
 
+from os.path import split as pathsplit
 from os import walk
 from os import makedirs
 import csv
 from numpy.matlib import repmat
 import re
 
-from lib.Community import Asnok
+from menace.lib.Community import Gekv
 
 #import pickle
 
@@ -110,6 +111,7 @@ with open(join(sys.argv[2],'taxIDs.txt'), mode='r') as infile:
 print("Traversing directories and generating tables, please wait.")
 for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 	folderName=dirpath[-9:]
+	#folderName=
 	for fn in filenames:
 		#print(fn)
 		#if (fn.endswith('coverage.csv')):
@@ -118,22 +120,27 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 		#		covTable.loc[ACC,folderName]=tmpTable.loc[ACC]
 
 		if (fn.endswith('report.tsv')):
+			folderName=pathsplit(dirpath)[1]
 			print(folderName)
+
 			tmpTable=pd.read_csv(join(sys.argv[1],dirpath,fn),delimiter='	',skiprows=1,index_col=0,usecols=[0, 1])
 			
-			for acc in tmpTable.index.values:
+			for ti in tmpTable.index.values:
 				
 				try:
 					#tmp_ti=re.match(r".*\|([0-9]+)\|.*",ti)
 					#tmp_ti=tmp_ti.group(1)
-					#print(bacteriaName[ti[3:]])
-					abundanceTable.loc[acc,'Name']=bacNameAcc[acc]
-					abundanceTable.loc[acc,folderName]=float(tmpTable.loc[acc])
+					species_name=bacteriaName[ti[3:]]
+					
+					abundanceTable.loc[species_name,'Name']=species_name
+					abundanceTable.loc[species_name,folderName]=float(tmpTable.loc[ti])
 				except KeyError as e:
 					print('IndexError - "%s"' % str(e))
 					
 					
 		if (fn.endswith('.depth.best.npy')):
+			folderName=pathsplit(pathsplit(dirpath)[0])[1]
+
 			ACC=fn[:-15]
 			try:
 				#data=pd.read_csv(join(sys.argv[1],folderName,fn),delimiter=" ")
@@ -175,6 +182,7 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 			oTable.loc[ACC,folderName]=vec[0]
 			tTable.loc[ACC,folderName]=vec[1]
 			cTable.loc[ACC,folderName]=vec[2]/float(vec[3])	
+			cTable.loc[ACC,'Name']=headerTable.loc[ACC,'Species Name']
 
 #########print(oTable.values)
 
@@ -241,13 +249,14 @@ print(headerTable.to_string(max_rows=1000))
 #ot2i=np.isnan(ot2)
 
 ptrTable=pd.DataFrame()
-tauTable=pd.DataFrame()
+#tauTable=pd.DataFrame()
 abTable=pd.DataFrame()
 
 for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 	folderName=dirpath[-9:]
 	for fn in filenames:
 		if (fn.endswith('.depth.npy')):
+			folderName=pathsplit(pathsplit(dirpath)[0])[1]
 			cont=True
 			ACC=fn[:-10]
 			try:
@@ -271,14 +280,14 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 				#print(folderName)
 				#print(np.round(OriC/Glen*dataVec.shape[0]))
 				#print(np.round(TerC/Glen*dataVec.shape[0]))
-				#PTR=dataVec[np.floor((OriC/Glen)*dataVec.shape[0])]/dataVec[np.floor((TerC/Glen)*dataVec.shape[0])]
+				PTR=dataVec[np.floor((OriC/Glen)*dataVec.shape[0])]/dataVec[np.floor((TerC/Glen)*dataVec.shape[0])]
 
-				PTR=2**bestValues[2]/2**bestValues[3]
+				#PTR=2**bestValues[2]/2**bestValues[3]
 
 				ptrTable.loc[ACC,'Name']=headerTable.loc[ACC,'Species Name']
 				ptrTable.loc[ACC,folderName]=PTR
-				tauTable.loc[ACC,'Name']=headerTable.loc[ACC,'Species Name']
-				tauTable.loc[ACC,folderName]=growthRate(PTR,Glen)
+				#tauTable.loc[ACC,'Name']=headerTable.loc[ACC,'Species Name']
+				#tauTable.loc[ACC,folderName]=growthRate(PTR,Glen)
 				#covTable.loc[ACC,'Name']=headerTable.loc[ACC,'Species Name']
 #				tauTable.loc[ACC,folderName]=PTR
 
@@ -286,6 +295,9 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 #ot2=oTable[oTable[[0]].apply(lambda x: x[0].isnan(), axis=0)]
 #print(np.array_str(ot2[ot2i]))
 #df = df[[]]
+
+cTable=cTable.sort('Name')
+cTable=cTable.sort_index(axis=1)
 
 ptrTable=ptrTable.sort('Name')
 ptrTable=ptrTable.sort_index(axis=1)
@@ -303,13 +315,28 @@ ptrTable=ptrTable.sort_index(axis=1)
 #abTable=abundanceTable.loc[ptrTable['Name'].isin(ptrTable['Name'])]
 #print(ptrTable.to_string)
 ####
-#try:
-#	abTable=abundanceTable[abundanceTable['Name'].isin(ptrTable['Name'])]
-#	abTable=abTable.sort('Name')
-#	abTable=abTable.sort_index(axis=1)
-#	abTable.to_csv('AbundancePTR.csv',sep=";")
-#except:
-#	pass
+try:
+	abTable=abundanceTable[abundanceTable['Name'].isin(cTable['Name'])]
+	abTable=abTable.sort('Name')
+	abTable=abTable.sort_index(axis=1)
+
+	# rescale ab values and renormalize
+	for c in list(abTable.columns.values):
+		
+		species=cTable.index.values[cTable[c].notnull()]
+		
+		for s in species:
+			
+			abTable.loc[c,s]=abTable.loc[c,s]/float(Gekv(cTable.loc[c,s],cTable.loc[c,s]))
+
+		norm_val=float(abTable[c].sum())
+		abTable[c] = abTable[c].apply(lambda x: x*1/norm_val)
+
+	abTable.to_csv(join(out_path,'CellAbundance.csv'),sep=";")
+except:
+	print("AbTable error.")
+	pass
+
 ###
 #try:
 #	covTable=covTable[covTable['Name'].isin(ptrTable['Name'])]
@@ -325,8 +352,8 @@ ptrTable=ptrTable.sort_index(axis=1)
 
 print("\n"+ptrTable.to_string(index=False))
 
-tauTable=tauTable.sort('Name')
-tauTable=tauTable.sort_index(axis=1)
+#tauTable=tauTable.sort('Name')
+#tauTable=tauTable.sort_index(axis=1)
 #covTable=covTable.sort_index(axis=1)
 
 out_path=join(sys.argv[4],'Collect')
@@ -337,10 +364,10 @@ except:
 	pass
 
 headerTable.to_csv(join(out_path,'Header.csv'),sep=";")
-ptrTable.to_csv(join(out_path,'PTR.csv'),sep=";",index=False)
-tauTable.to_csv(join(out_path,'DoublingTime.csv'),sep=";",index=False)
-abundanceTable.to_csv(join(out_path,'Abundance.csv'),sep=";",index=False)
-cTable.to_csv(join(out_path,'C.csv'),sep=";",index=False)
+ptrTable.to_csv(join(out_path,'PTR.csv'),sep=";")
+#tauTable.to_csv(join(out_path,'DoublingTime.csv'),sep=";",index=False)
+abundanceTable.to_csv(join(out_path,'ReadAbundance.csv'),sep=";")
+cTable.to_csv(join(out_path,'C.csv'),sep=";")
 
 print(" ".join(["\nOutput stored in"]+[join(sys.argv[4],'Collect')]))
 #plt.plot(y, 'r-')
