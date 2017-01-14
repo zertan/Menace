@@ -24,6 +24,9 @@ from Bio.SeqRecord import SeqRecord
 #import docker
 import configparser
 
+import csv
+import xmltodict
+
 # vars
 #cli = docker.APIClient(base_url='unix://var/run/docker.sock')
 #cli = docker.from_env()
@@ -481,3 +484,18 @@ def compare_fit_ptrc(c):
        
     return df
 
+def read_tax_id(tax_id_path):
+    with open(join(tax_id_path,'taxIDs.txt'), mode='r') as infile:
+        reader = csv.reader(infile,delimiter='  ')
+        bacteriaName={}
+        bacNameAcc={}
+        for rows in reader:
+            if (not rows[1]):
+                with open(join(tax_id_path,'Headers',rows[0]+".xml")) as fd:
+                    obj = xmltodict.parse(fd.read())
+                    bacteriaName[str(obj['DocSum']['Item'][7]['#text'])]=str(obj['DocSum']['Item'][1]['#text'])
+                    bacNameAcc[rows[0]]=str(obj['DocSum']['Item'][1]['#text'])
+            else:
+                bacteriaName[rows[1]]=rows[2]
+                bacNameAcc[rows[0]]=rows[2]
+    return [bacteriaName,bacNameAcc]

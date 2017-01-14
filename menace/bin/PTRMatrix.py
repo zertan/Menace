@@ -313,29 +313,34 @@ ptrTable=ptrTable.sort_index(axis=1)
 #abTable.columns=ptrTable.columns
 
 #abTable=abundanceTable.loc[ptrTable['Name'].isin(ptrTable['Name'])]
-#print(ptrTable.to_string)
 ####
-try:
-	abTable=abundanceTable[abundanceTable['Name'].isin(cTable['Name'])]
-	abTable=abTable.sort('Name')
-	abTable=abTable.sort_index(axis=1)
+#try:
+abTable=abundanceTable[abundanceTable['Name'].isin(cTable['Name'])]
+abTable=abTable.sort('Name')
+abTable=abTable.sort_index(axis=1)
 
-	# rescale ab values and renormalize
-	for c in list(abTable.columns.values):
+print("Ctable")
+print(cTable.to_string)
+
+print("Ab Table")
+print(abTable.to_string)
+
+# rescale ab values and renormalize
+for c in list(abTable.columns.values):
+	
+	species=cTable.index.values[cTable[c].notnull()]
+	
+	for s in species:
 		
-		species=cTable.index.values[cTable[c].notnull()]
-		
-		for s in species:
-			
-			abTable.loc[c,s]=abTable.loc[c,s]/float(Gekv(cTable.loc[c,s],cTable.loc[c,s]))
+		abTable.loc[s,c]=abTable.loc[s,c]/float(Gekv(cTable.loc[s,c],cTable.loc[s,c]))
 
-		norm_val=float(abTable[c].sum())
-		abTable[c] = abTable[c].apply(lambda x: x*1/norm_val)
+	norm_val=float(abTable[c].sum())
+	abTable[c] = abTable[c].apply(lambda x: x*1/norm_val)
 
-	abTable.to_csv(join(out_path,'CellAbundance.csv'),sep=";")
-except:
-	print("AbTable error.")
-	pass
+abTable.to_csv(join(out_path,'CellAbundance.csv'),sep=";")
+#except:
+#	print("AbTable error.")
+#	pass
 
 ###
 #try:

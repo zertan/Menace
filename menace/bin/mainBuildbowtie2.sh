@@ -25,7 +25,7 @@ cd $DATAPATH
 declare -a files
 
 shopt -s nullglob
-fileEndings=(".fastq" ".fq.bz2" ".fastq.gz" ".fastq.bz2" ".fastq.gz")
+fileEndings=(".fastq.gz" ".fastq.bz2" ".fastq" ".fq.bz2" ".fq.gz" ".fq")
 
 for ending in "${fileEndings[@]}"; do
     files=( *_1"$ending" )

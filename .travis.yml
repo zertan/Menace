@@ -38,4 +38,5 @@ install:
   - conda install menace --use-local
 
 script:
-  # Your test script goes here
+  - fetch_seq --help
+  - menace --help
