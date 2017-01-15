@@ -30,3 +30,4 @@ conda config --add channels zertan
 conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
 source activate test-environment
 conda build recipe/menace
+conda install -f --use-local -y menace
