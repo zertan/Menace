@@ -1,4 +1,4 @@
-"""A bioinformatics pipeline for estimation of relative cell periods."""
+"""A metagenomics pipeline to estimate relative cell periods."""
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
@@ -17,9 +17,7 @@ except(IOError, ImportError):
 
 #here = path.abspath(path.dirname(__file__))
 
-# Get the long description from the README file
-#with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
-#    long_description = f.read()
+execfile('menace/version.py')
 
 setup(
     name='menace',
@@ -27,7 +25,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.3',
+    version=__version__,
 
     description='A metagenomics pipeline to estimate relative cell periods.',
     
@@ -101,7 +99,7 @@ setup(
         'menace.test': ['comm00_1.fastq','comm00_2.fastq','searchStrings'],
         'menace.templates': ['jobscript','jobscript_local','project.conf'],
         'menace.bin': ['interp.pl','mainBuildbowtie2.sh','buildHelper.sh','mainBuildgem.sh','changeTID.sh'],
-        'menace.extra': ['accLoc.csv'],
+        'menace.extra': ['accLoc.csv','bacteria_record.dat'],
 		'menace.notebook': ['C.csv','Abundance.csv','Menace.ipynb'],
     },
 

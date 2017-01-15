@@ -385,7 +385,7 @@ def generate_local_command(config):
 
 def generate_collect_command(config,args):
     koremLoc=os.path.join(CODE_DIR,'extra/accLoc.csv')
-    cmd="python -W ignore " + CODE_DIR + "/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {output_path} {doric_path} " + koremLoc
+    cmd="python -W ignore " + CODE_DIR + "/bin/PTRMatrix.py {output_path} {ref_path} " + str(args.min_orics) + " {data_path} {doric_path} " + koremLoc
     return cmd.format(**config)
 
 def generate_notebook_command(args,config):

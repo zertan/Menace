@@ -57,18 +57,24 @@ for r in remove:
 		pass
 
 if(len(sys.argv) <= 1):
-	print("Usage: ./PTRMatrix.py DATA_PATH REF_PATH OUT_PATH DORIC_PATH LOC_FILE")
+	print("Usage: ./PTRMatrix.py OUT_PATH REF_PATH DATA_PATH DORIC_PATH LOC_FILE")
 	sys.exit(1)
 
-if(len(sys.argv) == 5):
-	try:
-		oriData=pd.DataFrame.from_csv(join(sys.argv[5],"bacteria_record.dat"),  sep='	',index_col=1)
-	except:
-		koremOriData=pd.DataFrame.from_csv(sys.argv[5],  sep=';',index_col=0)
-
 if(len(sys.argv) == 6):
-	oriData=pd.DataFrame.from_csv(join(sys.argv[5],"bacteria_record.dat"),  sep='   ',index_col=1)
-	koremOriData=pd.DataFrame.from_csv(sys.argv[6],  sep=';',index_col=0)
+	try:
+		oriData=pd.read_csv(join(sys.argv[5],"bacteria_record.dat"),  sep='\t',index_col=0,usecols=[1,5])
+	except:
+		try:
+			koremOriData=pd.read_csv(sys.argv[5],  sep=';',index_col=0)
+		except:
+			print("Origin data not found.")
+
+if(len(sys.argv) == 7):
+	try:
+		oriData=pd.read_csv(join(sys.argv[5],"bacteria_record.dat"),  sep='\t',index_col=0,usecols=[1,5])
+		koremOriData=pd.read_csv(sys.argv[6],  sep=';',index_col=0)
+	except:
+		print("Origin data not found.")
 
 #print(koremOriData.loc['NC_016845.1','OriC'])
 
@@ -77,7 +83,7 @@ oTable=pd.DataFrame()
 tTable=pd.DataFrame()
 cTable=pd.DataFrame()
 headerTable=pd.DataFrame()
-covTable=pd.DataFrame()
+#covTable=pd.DataFrame()
 #headerTable.colums=['ACC','Name','PTR','OriC','TerC','Length']
 
 abundanceTable=pd.DataFrame()
@@ -155,12 +161,13 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 
 						genomeLen=int(obj['DocSum']['Item'][8]['#text'])
 						bacteriaName2=obj['DocSum']['Item'][1]['#text']
+
 					headerTable.loc[ACC,'Name']=bacteriaName2
 					headerTable.loc[ACC,'Species Name']=bacNameAcc[ACC]
 					headerTable.loc[ACC,'Length']=genomeLen
 					#covTable.loc[ACC]=covTable.loc[ACC]/genomeLen
 					try:
-						oriLoc=oriData.loc[ACC,'oriC location']
+						oriLoc=oriData.loc[ACC]
 						oriLoc=oriLoc.split('..',1)
 						oriLoc=int(oriLoc[0])
 #						print(oriData.loc[sys.argv[1][:-6],'Organism'])
@@ -179,10 +186,11 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 				break
 			#print(ACC+","+folderName+": "+str(vec[0]))
             
+			name=headerTable.loc[ACC,'Species Name']
 			oTable.loc[ACC,folderName]=vec[0]
 			tTable.loc[ACC,folderName]=vec[1]
-			cTable.loc[ACC,folderName]=vec[2]/float(vec[3])	
-			cTable.loc[ACC,'Name']=headerTable.loc[ACC,'Species Name']
+			cTable.loc[name,folderName]=vec[2]-float(vec[3])        
+			#cTable.loc[name,'Name']=name
 
 #########print(oTable.values)
 
@@ -231,10 +239,10 @@ headerTable=headerTable[res]
 #print(res2.to_string)
 #print(headerTable.ix[res].to_string)
 #sys.quit()
-print(oTable.to_string(max_rows=1000))
+#print(oTable.to_string(max_rows=100))
 #print(headerTable.to_string)
 headerTable=headerTable.sort('Name')
-print(headerTable.to_string(max_rows=1000))
+print(headerTable.to_string(max_rows=100))
 
 
 #x0=np.linspace(0,10**6,100)
@@ -296,7 +304,8 @@ for (dirpath, dirnames, filenames) in walk(sys.argv[1]):
 #print(np.array_str(ot2[ot2i]))
 #df = df[[]]
 
-cTable=cTable.sort('Name')
+#cTable=cTable.sort('Name')
+cTable=cTable.sort_index(axis=0)
 cTable=cTable.sort_index(axis=1)
 
 ptrTable=ptrTable.sort('Name')
@@ -315,66 +324,84 @@ ptrTable=ptrTable.sort_index(axis=1)
 #abTable=abundanceTable.loc[ptrTable['Name'].isin(ptrTable['Name'])]
 ####
 #try:
-abTable=abundanceTable[abundanceTable['Name'].isin(cTable['Name'])]
-abTable=abTable.sort('Name')
+abTable=abundanceTable[abundanceTable['Name'].isin(cTable.index.values)]
+#abTable=abTable.sort('Name')
+del abTable['Name']
+abTable=abTable.sort_index(axis=0)
 abTable=abTable.sort_index(axis=1)
 
-print("Ctable")
-print(cTable.to_string)
+out_path=join(sys.argv[1],'Collect')
+try:
+    makedirs(out_path)
+except:
+    pass
 
-print("Ab Table")
-print(abTable.to_string)
+#print("Ctable")
+#print(cTable.to_string())
+
+#print("Ab Table")
+#print(abTable.to_string())
 
 # rescale ab values and renormalize
 for c in list(abTable.columns.values):
-	
-	species=cTable.index.values[cTable[c].notnull()]
-	
-	for s in species:
-		
-		abTable.loc[s,c]=abTable.loc[s,c]/float(Gekv(cTable.loc[s,c],cTable.loc[s,c]))
 
-	norm_val=float(abTable[c].sum())
-	abTable[c] = abTable[c].apply(lambda x: x*1/norm_val)
+    ind1=np.array(cTable[c].notnull())
+    #print ind
+    #ind=cTable.index.values
+    #print ind[ind1]
+    species=cTable.index.values[ind1]
+    #print species
 
-abTable.to_csv(join(out_path,'CellAbundance.csv'),sep=";")
+    for s in species:
+        print cTable.loc[s,c]
+        norm_val=float(Gekv(cTable.loc[s,c],cTable.loc[s,c]))
+        if np.isnan(norm_val): norm_val=1
+        #print norm_val
+        abTable.loc[s,c]=abTable.loc[s,c]/norm_val
+
+    norm_val=float(abTable[c].sum())
+    abTable[c] = abTable[c].apply(lambda x: x*1/norm_val)
+
+#print("Ab Table")
+#print(abTable.to_string())
+abTable=abTable.fillna(0)
 #except:
-#	print("AbTable error.")
-#	pass
+#   print("AbTable error.")
+#   pass
 
 ###
 #try:
-#	covTable=covTable[covTable['Name'].isin(ptrTable['Name'])]
-#	covTable=covTable.sort('Name')
-#	covTable=covTable.sort_index(axis=1)
-#	covTable.to_csv('AnalysisCov.csv',sep=";")
+#   covTable=covTable[covTable['Name'].isin(ptrTable['Name'])]
+#   covTable=covTable.sort('Name')
+#   covTable=covTable.sort_index(axis=1)
+#   covTable.to_csv('AnalysisCov.csv',sep=";")
 #except:
-#	pass
+#   pass
 
 #for i, row in ptrTable.iterrows():
-#	abTable.ix[i]=abundanceTable.loc[ptrTable.ix[i,'Name']]
+#   abTable.ix[i]=abundanceTable.loc[ptrTable.ix[i,'Name']]
 
 
-print("\n"+ptrTable.to_string(index=False))
+#print("\n"+ptrTable.to_string())
+print("\nRelative C Periods\n"+cTable.to_string())
+print("\nCell Abundance\n"+abTable.to_string())
 
 #tauTable=tauTable.sort('Name')
 #tauTable=tauTable.sort_index(axis=1)
 #covTable=covTable.sort_index(axis=1)
 
-out_path=join(sys.argv[4],'Collect')
-
-try:
-	makedirs(out_path)
-except:
-	pass
+#name_ind=abundanceTable.columns.get_loc()
+#del abundanceTable['Name']
+#del cTable['Name']
+#del abTable['Name']
 
 headerTable.to_csv(join(out_path,'Header.csv'),sep=";")
-ptrTable.to_csv(join(out_path,'PTR.csv'),sep=";")
+#ptrTable.to_csv(join(out_path,'PTR.csv'),sep=";")
 #tauTable.to_csv(join(out_path,'DoublingTime.csv'),sep=";",index=False)
 abundanceTable.to_csv(join(out_path,'ReadAbundance.csv'),sep=";")
 cTable.to_csv(join(out_path,'C.csv'),sep=";")
+abTable.to_csv(join(out_path,'CellAbundance.csv'),sep=";")
 
-print(" ".join(["\nOutput stored in"]+[join(sys.argv[4],'Collect')]))
+print(" ".join(["\nOutput stored in"]+[out_path]))
 #plt.plot(y, 'r-')
 #plt.savefig("asd.png")
-

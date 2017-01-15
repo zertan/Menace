@@ -11,7 +11,6 @@ RUN apk --update  --repository http://dl-4.alpinelinux.org/alpine/edge/community
 	zlib \
     zlib-dev \
 	linux-headers \
-    parallel \
     openssh-client \
     curl \
     ca-certificates \
@@ -47,14 +46,10 @@ RUN mkdir -p $CONDA_DIR && \
 
 # install packages
 RUN conda config --add channels conda-forge \
- && conda config --add channels r \
  && conda config --add channels bioconda \
- && conda install blas \
- && conda install samtools \
- && conda install bamtools \
- && conda install bowtie2 \
+ && conda config --add channels zertan \
  && conda clean -a --yes \
- && pip install --no-cache-dir --no-cache menace
+ && conda install menace
 
 # bitseq
 #RUN mkdir -p $BITSEQ_DIR && \

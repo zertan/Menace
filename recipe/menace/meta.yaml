@@ -38,25 +38,7 @@ requirements:
   build:
     - python
     - setuptools
-    - numpy
-    - scipy
-    - pandas
-    - biopython
-    - matplotlib
-    - xmltodict
-    - configparser
-    - lmfit
-    #- newick
-    - jinja2
-    - docker-py
-    - jupyter
-    - seaborn
-    - scikit-learn
-    - pathoscope
-    - bowtie2
-    - samtools >1.0
-    - bamtools
-    - parallel
+    - pypandoc
 
   run:
     - python
@@ -96,6 +78,7 @@ test:
 
     - menace --help
     - fetch_seq --help
+    #- mkdir m_test && cd m_test && menace -e hedani@chalmers.se test
 
   # You can also put a file called run_test.py in the recipe that will be run
   # at test time.

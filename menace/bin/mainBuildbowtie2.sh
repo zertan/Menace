@@ -39,12 +39,12 @@ done
 for fn in "${files[@]}"; do
 	echo "Aligning $fn:"
 	>&2 echo "$fn:"
-	bowtie2 -k 8 --very-sensitive -p $CPUCORES -x $REFPATH/Index/$REFNAME -1 "$fn"_1"$fileEnding" -2 "$fn"_2"$fileEnding" -S "$fn".sam --un-gz single_un_"$fn".fastq.gz --un-conc-gz paired_un_"$fn".fastq.gz --no-unal
+	bowtie2 -k 1 --very-sensitive -p $CPUCORES -x $REFPATH/Index/$REFNAME -1 "$fn"_1"$fileEnding" -2 "$fn"_2"$fileEnding" -S "$fn".sam #--un-gz single_un_"$fn".fastq.gz --un-conc-gz paired_un_"$fn".fastq.gz --no-unal
 done
 
-parallel -j $CPUCORES mv single_un_{}.fastq.gz $OUTPATH ::: "${files[@]}"
-parallel -j $CPUCORES mv paired_un_{}.fastq.1.gz $OUTPATH ::: "${files[@]}"
-parallel -j $CPUCORES mv paired_un_{}.fastq.2.gz $OUTPATH ::: "${files[@]}"
+#parallel -j $CPUCORES mv single_un_{}.fastq.gz $OUTPATH ::: "${files[@]}"
+#parallel -j $CPUCORES mv paired_un_{}.fastq.1.gz $OUTPATH ::: "${files[@]}"
+#parallel -j $CPUCORES mv paired_un_{}.fastq.2.gz $OUTPATH ::: "${files[@]}"
 
 parallel -j $CPUCORES rm -f {}_1"$fileEnding" {}_2"$fileEnding" ::: "${files[@]}"
 parallel "mkdir {} && mv {}.sam {}" ::: "${files[@]}"

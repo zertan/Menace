@@ -14,22 +14,27 @@ function secondaryFitHelper {
 export -f secondaryFitHelper
 
 function rep_sel {
-	cs=( `grep $1 $2/taxIDs.txt | awk '{print $1}'` )
-	max=0
- 	i=0
-	i_max=0
-	for ac in ${acs[@]}; do
-		#echo $ac
-		if [ -a $ac.depth ]; then
-			tmp=`perl -nle '$s += $_; END { print $s }' $ac.depth`
-			len=( `wc -l $ac.depth` )
-			((tmp > max)) && max=`bc <<< "scale = 4; $tmp/$len"` && i_max=$i
-		fi
- 	i=[$i+1]
+    cs=( `grep $1 $2/taxIDs.txt | awk '{print $1}'` )
+    max=0
+    i=0 
+    i_max=0
+    echo $1
+    for ac in ${cs[@]}; do
+        if [ -a $ac.depth ]; then
+            tmp=`perl -nle '$s += $_; END { print $s }' $ac.depth`
+            len=( `wc -l $ac.depth` )
+            tmp=`bc <<< "scale = 4; $tmp/$len"`
+            echo $ac $tmp
+            if (( $(echo "$tmp > $max" | bc -l) )); then
+                max=$tmp
+                i_max=$i
+            fi  
+        fi  
+        i=$[$i+1]
     done
-    echo ${ac[$i_max]}
- }
- export -f rep_sel
+    echo ${cs[$i_max]}
+}
+export -f rep_sel
 
 function getcpu {
 	pathojobs=$(pgrep "pathoscope ID" | wc -l)
@@ -111,6 +116,8 @@ endings=("log" "png" "npy" "depth")
 for ending in ${endings[@]}; do
 	mkdir $ending && files=(*.$ending) && if [ "${#files[@]}" -ne 0 ]; then mv *.$ending $ending; fi
 done
+
+rm -rf depth
 
 # cd depth
 
