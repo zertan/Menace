@@ -9,9 +9,6 @@ os:
   - linux
   - osx
 
-before_install:
-  - bash script/conda_preinstall.sh
-
 install:
   - bash script/conda_build.sh
 

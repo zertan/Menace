@@ -1,5 +1,13 @@
 #!/bin/bash
 
+if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+	brew update
+    export CONDA_OS=MacOSX
+elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+	sudo apt-get update
+	export CONDA_OS=Linux
+fi
+
 if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
 	wget https://repo.continuum.io/miniconda/Miniconda2-latest-$CONDA_OS-x86_64.sh -O miniconda.sh;
 else
