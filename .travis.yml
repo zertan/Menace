@@ -39,7 +39,8 @@ install:
   - conda build recipe/menace
   #- conda install -f --use-local -y menace
 
-script:
+#script:
+#  pass
   #- mkdir menace_test && cd menace_test && menace -e hedani@chalmers.se test && cd ..
 
 after_success:
