@@ -37,7 +37,7 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
   - conda build recipe/menace
-  - conda install -f --use-local -y menace
+  #- conda install -f --use-local -y menace
 
 script:
   #- mkdir menace_test && cd menace_test && menace -e hedani@chalmers.se test && cd ..
