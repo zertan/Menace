@@ -12,7 +12,8 @@ os:
 install:
   - bash script/conda_build.sh
 
-#script:
+script:
+  - echo "bla"
 #  - source activate test-environment
 #  - mkdir menace_test && cd menace_test && menace -e hedani@chalmers.se test && cd ..
 
