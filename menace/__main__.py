@@ -430,12 +430,14 @@ def make_dirs(conf):
         if not os.path.exists(conf[k]):
             os.makedirs(conf[k])
 
-    ref_sub=['Fasta','Headers','Index','Logs']
+    ref_sub=['Fasta','Headers','Index']
     rp=conf['ref_path']
     for d in ref_sub:
         if not os.path.exists(os.path.join(rp,d)):
             os.makedirs(os.path.join(rp,d))
 
+    if not os.path.exists(os.path.join(rp,d)):
+        os.makedirs(os.path.join(CWD,'Logs'))
 
 # def print_instructions(config):
 #     """Print instructions for executing pipeline."""

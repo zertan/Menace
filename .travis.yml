@@ -1,21 +1,50 @@
 language: python
 
-python:
-  # We don't actually use the Travis Python, but this keeps it organized.
-  #- "2.6"
-  - "2.7"
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      python: 2.7
+      env: TOXENV=py27
+    - os: osx
+      language: generic
+      env: TOXENV=py27
 
-os:
-  - linux
-  - osx
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && export CONDA_OS=MacOSX; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update && export CONDA_OS=Linux; fi
 
 install:
-  - bash script/conda_build.sh
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-$CONDA_OS-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-$CONDA_OS-x86_64.sh -O miniconda.sh;
+    fi
+
+  - bash miniconda.sh -b -p $HOME/miniconda
+
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no --set anaconda_upload no
+  - conda update -q conda
+  - conda info -a # Useful for debugging any issues with conda
+  - conda install conda-build anaconda-client
+
+  - conda config --add channels conda-forge
+  - conda config --add channels bioconda
+  - conda config --add channels zertan
+
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+  - source activate test-environment
+  - conda build recipe/menace
+  - conda install -f --use-local -y menace
 
 script:
-  - echo "bla"
-#  - source activate test-environment
-#  - mkdir menace_test && cd menace_test && menace -e hedani@chalmers.se test && cd ..
+  - mkdir menace_test && cd menace_test && menace -e hedani@chalmers.se test && cd ..
 
 after_success:
-  - bash script/conda_upload.sh
+  - export PKG_NAME=menace
+  - export OS=$TRAVIS_OS_NAME-64
+  - export CONDA_BLD_PATH=~/conda-bld
+  - export VERSION=`python -c "exec(\"execfile('menace/version.py')\nprint __version__\")"`
+  - anaconda -t $CONDA_UPLOAD_TOKEN upload -u $USER $CONDA_BLD_PATH/$OS/$PKG_NAME-$VERSION-py27_0.tar.bz2 --force
