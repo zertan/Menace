@@ -12,9 +12,9 @@ os:
 install:
   - bash script/conda_build.sh
 
-script:
-  - source activate test-environment
-  - mkdir menace_test && cd menace_test && menace -e hedani@chalmers.se test && cd ..
+#script:
+#  - source activate test-environment
+#  - mkdir menace_test && cd menace_test && menace -e hedani@chalmers.se test && cd ..
 
 after_success:
   - bash script/conda_upload.sh
