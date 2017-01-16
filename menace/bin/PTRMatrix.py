@@ -398,7 +398,7 @@ print("\nCell Abundance\n"+abTable.to_string())
 headerTable.to_csv(join(out_path,'Header.csv'),sep=";")
 #ptrTable.to_csv(join(out_path,'PTR.csv'),sep=";")
 #tauTable.to_csv(join(out_path,'DoublingTime.csv'),sep=";",index=False)
-abundanceTable.to_csv(join(out_path,'ReadAbundance.csv'),sep=";")
+abundanceTable.to_csv(join(out_path,'ReadAbundance.csv'),sep=";",index=False)
 cTable.to_csv(join(out_path,'C.csv'),sep=";")
 abTable.to_csv(join(out_path,'CellAbundance.csv'),sep=";")
 

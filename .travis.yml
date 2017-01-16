@@ -2,7 +2,7 @@ language: python
 
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
-  - "2.6"
+  #- "2.6"
   - "2.7"
 
 os:
@@ -13,6 +13,7 @@ install:
   - bash script/conda_build.sh
 
 script:
+  - source activate test-environment
   - mkdir menace_test && cd menace_test && menace -e hedani@chalmers.se test && cd ..
 
 after_success:
